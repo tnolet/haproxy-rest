@@ -89,7 +89,7 @@ func main() {
 				if err != nil {
 					c.String(500, err.Error())
 				} else {
-					c.String(200, status)
+					c.JSON(200, status)
 				}
 
 			})

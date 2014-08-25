@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"errors"
 	"strings"
+	"encoding/json"
 )
 
 
@@ -122,13 +123,23 @@ func GetStatsFrontend() ([]StatsGroup, error) {
 }
 
 
-func GetInfo() (string, error) {
-
+func GetInfo() (Info, error) {
+	var Info Info
 	result, err := HaproxyCmd("show info \n")
 	if err != nil {
-		return "", err
+		return Info, err
 	} else {
-		return result, nil
+		result, err := parse_multi_line(result)
+		if err != nil {
+			return Info, err
+		} else {
+			err := json.Unmarshal([]byte(result), &Info)
+			if err != nil {
+				return Info, err
+			} else {
+				return Info, nil
+			}
+		}
 	}
 
 }
