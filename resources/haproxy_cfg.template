@@ -1,0 +1,53 @@
+global
+ pidfile {{.PidFile}}
+ log 127.0.0.1 local0
+ log 127.0.0.1 local1 notice
+ daemon
+ maxconn 4096
+ stats socket /tmp/haproxy.stats.sock level admin
+
+ defaults
+   log global
+   option dontlognull
+   option redispatch
+   retries 3
+   maxconn 2000
+   timeout connect 5000ms
+   timeout client 50000ms
+   timeout server 50000ms
+listen stats :1988
+   mode http
+   stats enable
+   stats uri /
+   stats refresh 2s
+   stats realm Haproxy\ Stats
+   stats auth showme:showme
+frontend http
+    bind :8000
+
+### BEGIN GENERATED SECTION ###
+
+{{range .Backends}}
+backend {{.Name}}
+{{range .BackendServers}}
+	server {{.Name}}_{{.Host}}_{{.Port}} {{.Host}}:{{.Port}} weight {{.Weight}} maxconn {{.MaxConn}} {{if .Check}}check inter {{.CheckInterval}}{{end}}{{end}}
+{{if .Options.AbortOnClose}}	option abortonclose{{end}}
+{{if .Options.AllBackups}}	option allbackups{{end}}
+{{if .Options.CheckCache}}	option checkcache{{end}}
+{{if .Options.ForwardFor}}       option forwardfor{{end}}
+{{if .Options.HttpClose}}	option httpclose{{end}}
+{{if .Options.HttpCheck}}	option httpchki{{end}}
+{{if .Options.LdapCheck}}	option ldap-check{{end}}
+{{if .Options.MysqlCheck}}	option mysql-check{{end}}
+{{if .Options.PgsqlCheck}}	option pgsql-check{{end}}
+{{if .Options.RedisCheck}}	option redis-check{{end}}
+{{if .Options.SmtpCheck}}	option smtpchk{{end}}
+{{if .Options.SslHelloCheck}}	option ssl-hello-chk{{end}}
+{{if .Options.TcpKeepAlive}}	option tcpka{{end}}
+{{if .Options.TcpSmartAccept}}	option tcp-smart-accept{{end}}
+{{if .Options.TcpSmartConnect}}	option tcp-smart-connect{{end}}
+{{if .Options.TcpLog}}	option tcplog{{end}}
+{{if .Options.Transparent}}	option transparent
+{{end}}
+{{end}}
+### END GENERATED SECTION ###

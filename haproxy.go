@@ -7,6 +7,9 @@ import (
 	"errors"
 	"strings"
 	"encoding/json"
+	"io/ioutil"
+	"os/exec"
+	"bytes"
 )
 
 
@@ -64,64 +67,87 @@ func SetWeight(backend string, server string, weight string) (string, error){
 
  */
 
-// get the basic stats in CSV format
-func GetStats() ([]StatsGroup, error) {
+/* get the basic stats in CSV format
 
-	var empty []StatsGroup
-	result, err := HaproxyCmd("show stat -1\n")
+	@parameter statsType takes the form of:
+	-	all
+	-	frontend
+	-	backend
+*/
+func GetStats(statsType string) ([]StatsGroup, error) {
+	var Stats []StatsGroup
+	var cmdString string
 
-	if err != nil {
-		return empty, err
-	} else {
-
-		json_result, err := parse_csv(strings.Trim(result,"# "))
-		if err != nil {
-			return empty, err
-		} else {
-			return json_result, nil
-		}
-
+	switch statsType {
+	case "all":
+		cmdString = "show stat -1\n"
+	case "backend":
+		cmdString = "show stat -1 2 -1\n"
+	case "frontend":
+		cmdString = "show stat -1 1 -1\n"
 	}
 
-}
-
-func GetStatsBackend() ([]StatsGroup, error) {
-
-	var empty []StatsGroup
-	result, err := HaproxyCmd("show stat -1 2 -1\n")
+	result, err := HaproxyCmd(cmdString)
 	if err != nil {
-		return empty, err
+		return Stats, err
 	} else {
-
-		json_result, err := parse_csv(strings.Trim(result,"# "))
-
+		result, err := parse_csv(strings.Trim(result,"# "))
 		if err != nil {
-			return empty, err
+			return Stats, err
 		} else {
-			return json_result, nil
-		}
-
-	}
-}
-
-func GetStatsFrontend() ([]StatsGroup, error) {
-
-	var empty []StatsGroup
-	result, err := HaproxyCmd("show stat -1 1 -1\n")
-	if err != nil {
-		return empty, err
-	} else {
-
-		json_result, err := parse_csv(strings.Trim(result,"# "))
-		if err != nil {
-			return empty, err
-		} else {
-			return json_result, nil
+			err := json.Unmarshal([]byte(result), &Stats)
+			if err != nil {
+				return Stats, err
+			} else {
+				return Stats, nil
+			}
 		}
 
 	}
 }
 
+/*
+
+	Reload
+
+ */
+
+// Configuration reload
+func Reload(binary, config, pidfile string) error {
+
+	pid, err := ioutil.ReadFile(pidfile)
+	if err !=nil {
+		return err
+	}
+
+	/* 	Setup all the command line parameters so we get an executable similar to
+		/usr/local/bin/haproxy -f resources/haproxy_new.cfg -p resources/haproxy-private.pid -st 1234
+
+	*/
+	arg0 := "-f"
+	arg1 := config
+	arg2 := "-p"
+	arg3 := pidfile
+	arg4 := "-st"
+	arg5 := string(pid)
+	cmd := exec.Command(binary, arg0, arg1 ,arg2, arg3, arg4, arg5)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmdErr := cmd.Run()
+	if cmdErr != nil {
+		fmt.Println(cmdErr.Error())
+		return cmdErr
+	}
+	log.Info("HaproxyReload: " + out.String() + string(pid))
+	return nil
+}
+
+
+/*
+
+	Info
+
+ */
 
 func GetInfo() (Info, error) {
 	var Info Info

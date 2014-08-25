@@ -6,22 +6,17 @@ import (
 	"io"
 	"strings"
 	"bytes"
-	"encoding/json"
 )
 
-
-// parses the raw stats CSV output to a Json Object
-func parse_csv(csvInput string) ([]StatsGroup, error){
+// parses the raw stats CSV output to a json string
+func parse_csv(csvInput string) (string, error){
 
 	csvReader := csv.NewReader(strings.NewReader(csvInput))
 	lineCount := 0
 	var headers []string
 	var result bytes.Buffer
 	var item bytes.Buffer
-	var empty []StatsGroup
-	var statsAll []StatsGroup
 	result.WriteString("[")
-
 
 	for {
 		// read just one record, but we could ReadAll() as well
@@ -33,7 +28,7 @@ func parse_csv(csvInput string) ([]StatsGroup, error){
 			break
 		} else if err != nil {
 			fmt.Println("Error:", err)
-			return empty, err
+			return "", err
 		}
 
 		if lineCount == 0 {
@@ -55,10 +50,5 @@ func parse_csv(csvInput string) ([]StatsGroup, error){
 			lineCount += 1
 		}
 	}
-	var jsonBlob = []byte(result.String())
-	err := json.Unmarshal(jsonBlob, &statsAll)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-	return statsAll, nil
+	return result.String(), nil
 }

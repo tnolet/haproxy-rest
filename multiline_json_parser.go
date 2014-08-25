@@ -6,6 +6,22 @@ import (
 	"bytes"
 	"strings"
 )
+/* Parses a multi-line input to a JSON string
+
+	input:
+
+	key1: value1 \n
+	key2: value2 \n
+
+	output:
+
+	{ "key" : "value",
+	  "key" : "value"
+	}
+
+
+
+*/
 
 func parse_multi_line(multiLineInput string)(string, error){
 
