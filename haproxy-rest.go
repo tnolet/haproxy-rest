@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"encoding/json"
 	"sync"
+	"strconv"
 )
 
 // override the standard Gin-Gonic middleware to add the CORS headers
@@ -23,16 +24,18 @@ func CORSMiddleware() gin.HandlerFunc {
 
 // set some globally used vars
 var (
-	port                	= flag.String("port", "10001", "Port/IP to use for the REST interface")
-	configFile				= flag.String("configFile", "resources/haproxy_new.cfg", "Location of the target HAproxy config file")
-	templateFile 			= flag.String("template", "resources/haproxy_cfg.template", "Template file to build HAproxy config")
-	binary       			= flag.String("binary", "/usr/local/bin/haproxy", "Path to the HAproxy binary")
-	pidFile      			= flag.String("pidFile", "resources/haproxy-private.pid", "Location of the HAproxy PID file")
 	ConfigObj *Config
 	log, _  = syslog.New(syslog.LOG_DEBUG, "haproxy-rest")
 )
 
 func main() {
+
+	port            := flag.Int("port",10001, "Port/IP to use for the REST interface")
+	configFile	 	:= flag.String("configFile", "resources/haproxy_new.cfg", "Location of the target HAproxy config file")
+	templateFile  	:= flag.String("template", "resources/haproxy_cfg.template", "Template file to build HAproxy config")
+	binary        	:= flag.String("binary", "/usr/local/bin/haproxy", "Path to the HAproxy binary")
+	pidFile       	:= flag.String("pidFile", "resources/haproxy-private.pid", "Location of the HAproxy PID file")
+	flag.Parse()
 
 	s, err := ioutil.ReadFile("resources/config_example.json")
 	if err != nil {
@@ -141,7 +144,7 @@ func main() {
 
 		// get config file
 		v1.GET("/config", func(c *gin.Context){
-				c.String(200, string(s))
+				c.JSON(200, ConfigObj)
 		})
 
 		// set config file
@@ -183,7 +186,6 @@ func main() {
 			})
 	}
 
-
 	// Listen and server on port
-	r.Run("0.0.0.0:" + *port)
+	r.Run("0.0.0.0:" + strconv.Itoa(*port))
 }

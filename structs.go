@@ -126,6 +126,7 @@ type Info struct {
 // Main configuration object. This contains all variables and is passed to
 // the templating engine.
 type Config struct {
+	Frontends [] *Frontend			`json:frontends"`
 	Backends [] *Backend 			`json:"backends"`
 	PidFile  string              	`json:"-"`
 	Mutex    *sync.RWMutex       	`json:"-"`
@@ -138,6 +139,16 @@ type Backend struct {
 	BackendServers [] *BackendServer 		 `json:"servers"`
 	Options        ProxyOptions              `json:"options"`
 }
+
+// Defines a single haproxy "frontend".
+type Frontend struct {
+	Name           string                    `json:"name"`
+	BindPort	   int			 			 `json:"bindPort"`
+	BindIp		   string			 	 	 `json:"bindIp"`
+	Options        ProxyOptions              `json:"options"`
+	UseBackend	   string		 			 `json:"useBackend"`
+}
+
 
 
 type ProxyOptions struct {
