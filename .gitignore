@@ -28,4 +28,3 @@ _testmain.go
 *.iml
 out
 *.pid
-target
