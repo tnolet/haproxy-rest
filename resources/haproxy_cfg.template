@@ -41,7 +41,7 @@ backend {{.Name}}
     balance roundrobin
     http-send-name-header X-MIO-Server
 {{range .BackendServers}}
-	server {{.Name}}_{{.Host}}_{{.Port}} {{.Host}}:{{.Port}} weight {{.Weight}} maxconn {{.MaxConn}} {{if .Check}}check inter {{.CheckInterval}}{{end}}{{end}}
+	server {{.Name}} {{.Host}}:{{.Port}} weight {{.Weight}} maxconn {{.MaxConn}} {{if .Check}}check inter {{.CheckInterval}}{{end}}{{end}}
 {{if .Options.AbortOnClose}} option abortonclose{{end}}
 {{if .Options.AllBackups}} option allbackups{{end}}
 {{if .Options.CheckCache}} option checkcache{{end}}
