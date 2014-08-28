@@ -48,12 +48,13 @@ func HaproxyCmd(cmd string) (string, error){
 
 
 func SetWeight(backend string, server string, weight string) (string, error){
+
 	result, err := HaproxyCmd("set weight " + backend + "/" + server + " " + weight +"\n")
+
 
 	if err != nil {
 		return "", err
 	} else {
-		fmt.Println(result)
 		return result, nil
 	}
 

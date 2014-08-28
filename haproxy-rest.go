@@ -2,13 +2,14 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"log/syslog"
+	//"log/syslog"
 	"flag"
 	"io/ioutil"
 	"fmt"
 	"encoding/json"
 	"sync"
 	"strconv"
+	"github.com/jcelliott/lumber"
 )
 
 // override the standard Gin-Gonic middleware to add the CORS headers
@@ -25,10 +26,18 @@ func CORSMiddleware() gin.HandlerFunc {
 // set some globally used vars
 var (
 	ConfigObj *Config
-	log, _  = syslog.New(syslog.LOG_DEBUG, "haproxy-rest")
+	logFile,_ = lumber.NewFileLogger("/tmp/haproxy-rest.log", lumber.DEBUG, lumber.ROTATE, 1000, 3, 100)
+	logConsole  = lumber.NewConsoleLogger(lumber.DEBUG)
+	log = lumber.NewMultiLogger()
+
 )
 
 func main() {
+
+	// log to console and file
+	log.Prefix("Haproxy-rest")
+	log.AddLoggers(logFile, logConsole)
+
 
 	port            := flag.Int("port",10001, "Port/IP to use for the REST interface")
 	configFile	 	:= flag.String("configFile", "resources/haproxy_new.cfg", "Location of the target HAproxy config file")
@@ -56,12 +65,12 @@ func main() {
 
 	err = RenderConfig(*configFile, *templateFile, ConfigObj)
 	if err != nil {
-		fmt.Println("Error rendering config file")
+		log.Error("Error rendering config file")
 		return
 	} else {
 		err = Reload(*binary, *configFile, *pidFile)
 		if err != nil {
-			fmt.Println("Error reloading the HAproxy configuration")
+			log.Error("Error reloading the HAproxy configuration")
 			return
 		}
 
@@ -86,19 +95,27 @@ func main() {
 
 		 */
 
-		v1.GET("/backend/:name/:server/weight/:weight", func(c *gin.Context){
+		v1.POST("/backend/:name/:server/weight/:weight", func(c *gin.Context){
 				backend := c.Params.ByName("name")
 				server :=  c.Params.ByName("server")
 				weight  := c.Params.ByName("weight")
 				status, err := SetWeight(backend, server, weight)
+
+				// check on runtime errors
 				if err != nil {
 					c.String(500, err.Error())
 				} else {
-					c.String(200, status)
+
+					switch status {
+					case "No such server.\n\n":
+						c.String(404, status)
+					case "No such backend.\n\n":
+						c.String(404, status)
+					default:
+						c.String(200,"Ok")
+					}
 				}
-
 			})
-
 		/*
 
 			Stats Actions
