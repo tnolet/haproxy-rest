@@ -16,7 +16,7 @@ ADD ./target/linux_i386/haproxy-rest /haproxy-rest
 
 ADD ./resources /resources
 
-ADD ./dependencies/haproxy /usr/local/bin/haproxy
+ADD ./target/linux_i386/haproxy /usr/local/bin/haproxy
 
 EXPOSE 80
 
