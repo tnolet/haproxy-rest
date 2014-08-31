@@ -38,7 +38,7 @@ func main() {
 	log.Prefix("Haproxy-rest")
 	log.AddLoggers(logFile, logConsole)
 
-
+	// implicit -h prints out help messages
 	port            := flag.Int("port",10001, "Port/IP to use for the REST interface")
 	configFile	 	:= flag.String("configFile", "resources/haproxy_new.cfg", "Location of the target HAproxy config file")
 	templateFile  	:= flag.String("template", "resources/haproxy_cfg.template", "Template file to build HAproxy config")
