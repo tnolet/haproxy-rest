@@ -39,7 +39,7 @@ func main() {
 	log.AddLoggers(logFile, logConsole)
 
 	// implicit -h prints out help messages
-	port            := flag.Int("port",10001, "Port/IP to use for the REST interface")
+	port            := flag.Int("port",10001, "Port/IP to use for the REST interface. Overrides $PORT0 env variable")
 	configFile	 	:= flag.String("configFile", "resources/haproxy_new.cfg", "Location of the target HAproxy config file")
 	templateFile  	:= flag.String("template", "resources/haproxy_cfg.template", "Template file to build HAproxy config")
 	binary        	:= flag.String("binary", "/usr/local/bin/haproxy", "Path to the HAproxy binary")
@@ -212,6 +212,11 @@ func main() {
 			})
 	}
 
+	// get the Mesos port to listen on
+	if *port == 10001 {
+		envPort := os.Getenv("PORT0")
+		if envPort != "" { *port, err = strconv.Atoi(envPort) }
+	}
 	// Listen and server on port
 	r.Run("0.0.0.0:" + strconv.Itoa(*port))
 }
