@@ -30,3 +30,4 @@ out
 *.pid
 haproxy-rest
 resources/haproxy_new.cfg
+atlassian-ide-plugin.xml

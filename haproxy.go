@@ -130,8 +130,15 @@ func Reload(binary, config, pidfile string) error {
 	arg2 := "-p"
 	arg3 := pidfile
 	arg4 := "-st"
-	arg5 := string(pid)
-	cmd := exec.Command(binary, arg0, arg1 ,arg2, arg3, arg4, arg5)
+	arg5 := strings.Trim(string(pid),"\n")
+	var cmd *exec.Cmd
+
+	// If this is the first run, the PID value will be empty, otherwise it will be > 0
+	if len(arg5) > 0 {
+		cmd = exec.Command(binary, arg0, arg1 ,arg2, arg3, arg4, arg5)
+	} else {
+		cmd = exec.Command(binary, arg0, arg1 ,arg2, arg3 )
+	}
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	cmdErr := cmd.Run()

@@ -2,14 +2,14 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	//"log/syslog"
 	"flag"
 	"io/ioutil"
 	"fmt"
 	"encoding/json"
 	"sync"
-	"strconv"
 	"github.com/jcelliott/lumber"
+	"os"
+	"strconv"
 )
 
 // override the standard Gin-Gonic middleware to add the CORS headers
@@ -46,10 +46,12 @@ func main() {
 	pidFile       	:= flag.String("pidFile", "resources/haproxy-private.pid", "Location of the HAproxy PID file")
 	flag.Parse()
 
+	// some initial example config is loaded
 	s, err := ioutil.ReadFile("resources/config_example.json")
 	if err != nil {
 		panic("Cannot find config file at location")
 	}
+	// example is parsed to a configuration object
 	err = json.Unmarshal(s, &ConfigObj)
 	if err != nil {
 		fmt.Println("Error parsing JSON")
@@ -57,9 +59,16 @@ func main() {
 		ConfigObj.Mutex = new(sync.RWMutex)
 	}
 
-
 	if ConfigObj.PidFile != *pidFile {
 		ConfigObj.PidFile = *pidFile
+	}
+
+	//Create and empty pid file on the specified location, if not already there
+	if _, err := os.Stat(*pidFile); err == nil {
+		log.Info("Pid file exists, proceeding with startup..")
+	} else {
+		emptyPid := []byte("")
+		ioutil.WriteFile(*pidFile,emptyPid,0644)
 	}
 
 
