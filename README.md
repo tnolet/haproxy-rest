@@ -7,7 +7,7 @@ HAproxy's socket interface to a handy REST interface.
 *Important* : Currently, HAproxy-rest does NOT check validity of the HAproxy commands and configs submitted to it.
 Submitting a config where a frontend references a non-existing backend will be accepted by the REST api but crash HAproxy
 
-## Getting started: the easy Docker way
+## Installing: the easy Docker way
 
 Start up an instance with all defaults and bind it to the local network interface
 
@@ -28,10 +28,18 @@ and the [gin-gonic](https://github.com/gin-gonic/gin) web framework spit out all
      [GIN-debug] POST  /v1/config                --> main.func·007 (4 handlers)
      [GIN-debug] GET   /v1/info                  --> main.func·008 (4 handlers)
      [GIN-debug] Listening and serving HTTP on 0.0.0.0:10001
+### Changing the port
 
 You could change the REST api port by adding the `-port` flag
 
     $ docker run --net=host tnolet/haproxy-rest -port=1234
+
+Or by exporting an environment variable `PORT0`. When deploying with Marathon 0.7.0, this is done automatically
+     
+     $ export PORT0=12345
+     $ docker run --net=host tnolet/haproxy-rest
+
+### Getting statistics/metrics
      
 Grab some stats. Notice the IP address. This is [boot2docker](https://github.com/boot2docker/boot2docker)'s address on my Macbook. I'm using [httpie](https://github.com/jakubroztocil/httpie) instead of Curl.
 
@@ -51,6 +59,7 @@ Grab some stats. Notice the IP address. This is [boot2docker](https://github.com
             "chkfail": "", 
             "cli_abrt": "", 
             ...
+### Updating the configuration
 
 Post a configuration. You can use the example file `resources/config_example.json`
 
@@ -67,7 +76,7 @@ Update the weight of some backend server
     Ok
 
     
-## Getting started: the harder custom build way
+## Installing: the harder custom build way
 
 Install HAproxy 1.5 or greater in whatever way you like. Just make sure the `haproxy` executable is in your `PATH`. For Ubuntu, use:
 
