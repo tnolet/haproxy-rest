@@ -10,9 +10,10 @@ import (
 	"io/ioutil"
 	"os/exec"
 	"bytes"
+	"strconv"
 )
 
-
+// Executes a arbitrariry HAproxy command on the unix socket
 func HaproxyCmd(cmd string) (string, error){
 
 	// connect to haproxy
@@ -46,10 +47,10 @@ func HaproxyCmd(cmd string) (string, error){
 
  */
 
+// Sets the weight of a backend
+func SetWeight(backend string, server string, weight int) (string, error){
 
-func SetWeight(backend string, server string, weight string) (string, error){
-
-	result, err := HaproxyCmd("set weight " + backend + "/" + server + " " + weight +"\n")
+	result, err := HaproxyCmd("set weight " + backend + "/" + server + " " + strconv.Itoa(weight) +"\n")
 
 
 	if err != nil {
@@ -59,8 +60,6 @@ func SetWeight(backend string, server string, weight string) (string, error){
 	}
 
 }
-
-
 
 /*
 

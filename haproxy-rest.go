@@ -68,7 +68,7 @@ func main() {
 		log.Info("Pid file exists, proceeding with startup..")
 	} else {
 		emptyPid := []byte("")
-		ioutil.WriteFile(*pidFile,emptyPid,0644)
+		ioutil.WriteFile(*pidFile, emptyPid, 0644)
 	}
 
 
@@ -107,7 +107,7 @@ func main() {
 		v1.POST("/backend/:name/:server/weight/:weight", func(c *gin.Context){
 				backend := c.Params.ByName("name")
 				server :=  c.Params.ByName("server")
-				weight  := c.Params.ByName("weight")
+				weight,_  := strconv.Atoi(c.Params.ByName("weight"))
 				status, err := SetWeight(backend, server, weight)
 
 				// check on runtime errors
@@ -121,6 +121,10 @@ func main() {
 					case "No such backend.\n\n":
 						c.String(404, status)
 					default:
+						//update the config object with the new weight
+
+						ConfigObj = UpdateWeightInConfig(backend, server, weight, ConfigObj)
+
 						c.String(200,"Ok")
 					}
 				}
