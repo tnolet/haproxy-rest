@@ -85,6 +85,8 @@ func GetStats(statsType string) ([]StatsGroup, error) {
 		cmdString = "show stat -1 2 -1\n"
 	case "frontend":
 		cmdString = "show stat -1 1 -1\n"
+	case "server":
+		cmdString = "show stat -1 4 -1\n"
 	}
 
 	result, err := HaproxyCmd(cmdString)

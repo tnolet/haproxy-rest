@@ -165,6 +165,15 @@ func main() {
 				}
 
 			})
+		v1.GET("/stats/server", func(c *gin.Context) {
+				status, err := GetStats("server")
+				if err != nil {
+					c.String(500, err.Error())
+				} else {
+					c.JSON(200, status)
+				}
+
+			})
 
 		/*
 
