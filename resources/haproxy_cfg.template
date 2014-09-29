@@ -38,7 +38,9 @@ frontend {{.Name}}
 
 {{range .Backends}}
 backend {{.Name}}
+    mode http
     balance roundrobin
+    option forwardfor
     http-send-name-header X-MIO-Server
 {{range .BackendServers}}
 	server {{.Name}} {{.Host}}:{{.Port}} weight {{.Weight}} maxconn {{.MaxConn}} {{if .Check}}check inter {{.CheckInterval}}{{end}}{{end}}
