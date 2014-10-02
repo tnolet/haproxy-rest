@@ -41,9 +41,10 @@ backend {{.Name}}
     mode http
     balance roundrobin
     option forwardfor
-    http-send-name-header X-MIO-Server
+    http-response set-header X-Vamp-Server %s
+    cookie vamp_srv insert httponly maxidle 5m maxlife 1h
 {{range .BackendServers}}
-	server {{.Name}} {{.Host}}:{{.Port}} weight {{.Weight}} maxconn {{.MaxConn}} {{if .Check}}check inter {{.CheckInterval}}{{end}}{{end}}
+	server {{.Name}} {{.Host}}:{{.Port}} cookie {{.Name}} weight {{.Weight}} maxconn {{.MaxConn}} {{if .Check}}check inter {{.CheckInterval}}{{end}} {{end}}
 {{if .Options.AbortOnClose}} option abortonclose{{end}}
 {{if .Options.AllBackups}} option allbackups{{end}}
 {{if .Options.CheckCache}} option checkcache{{end}}
