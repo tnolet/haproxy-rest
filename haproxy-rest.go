@@ -10,6 +10,7 @@ import (
 	"github.com/jcelliott/lumber"
 	"os"
 	"strconv"
+
 )
 
 // override the standard Gin-Gonic middleware to add the CORS headers
@@ -26,25 +27,30 @@ func CORSMiddleware() gin.HandlerFunc {
 // set some globally used vars
 var (
 	ConfigObj *Config
-	logFile,_ = lumber.NewFileLogger("/tmp/haproxy-rest.log", lumber.DEBUG, lumber.ROTATE, 1000, 3, 100)
-	logConsole  = lumber.NewConsoleLogger(lumber.DEBUG)
+	logFile, _ = lumber.NewFileLogger("/tmp/haproxy-rest.log", lumber.INFO, lumber.ROTATE, 1000, 3, 100)
+	logConsole = lumber.NewConsoleLogger(lumber.INFO)
 	log = lumber.NewMultiLogger()
-
 )
 
 func main() {
 
-	// log to console and file
+
 	log.Prefix("Haproxy-rest")
+
 	log.AddLoggers(logFile, logConsole)
+
 
 	// implicit -h prints out help messages
 	port            := flag.Int("port",10001, "Port/IP to use for the REST interface. Overrides $PORT0 env variable")
 	configFile	 	:= flag.String("configFile", "resources/haproxy_new.cfg", "Location of the target HAproxy config file")
 	templateFile  	:= flag.String("template", "resources/haproxy_cfg.template", "Template file to build HAproxy config")
 	binary        	:= flag.String("binary", "/usr/local/bin/haproxy", "Path to the HAproxy binary")
+	kafkaHost       := flag.String("kafkaHost", "localhost", "The hostname or ip address of the Kafka host")
+	kafkaPort       := flag.Int("kafkaPort",9092, "The port of the Kafka host")
 	pidFile       	:= flag.String("pidFile", "resources/haproxy-private.pid", "Location of the HAproxy PID file")
+
 	flag.Parse()
+
 
 	// some initial example config is loaded
 	s, err := ioutil.ReadFile("resources/config_example.json")
@@ -65,7 +71,7 @@ func main() {
 
 	//Create and empty pid file on the specified location, if not already there
 	if _, err := os.Stat(*pidFile); err == nil {
-		log.Info("Pid file exists, proceeding with startup..")
+		log.Info("Pid file exists, proceeding with startup...")
 	} else {
 		emptyPid := []byte("")
 		ioutil.WriteFile(*pidFile, emptyPid, 0644)
@@ -85,6 +91,8 @@ func main() {
 
 	}
 
+	// Setup Kafka producer
+	setUpProducer(*kafkaHost, *kafkaPort)
 
 	log.Info("Starting REST server")
 	// initialize the web stack
