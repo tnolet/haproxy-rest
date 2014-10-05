@@ -47,11 +47,11 @@ Or by exporting an environment variable `PORT0`. When deploying with Marathon 0.
      $ export PORT0=12345
      $ docker run --net=host tnolet/haproxy-rest
 
-### Getting statistics/metrics
+## Getting statistics/metrics
 
 Statistics are published in two different ways: straight from the REST interface and as Kafka topics
 
-## Stats via REST
+### Stats via REST
      
 Grab some stats from the `/stats` endpoint. Notice the IP address. This is [boot2docker](https://github.com/boot2docker/boot2docker)'s address on my Macbook. I'm using [httpie](https://github.com/jakubroztocil/httpie) instead of Curl.
 
@@ -75,7 +75,7 @@ Grab some stats from the `/stats` endpoint. Notice the IP address. This is [boot
 Valid endpoints are `stats/frontend`, `stats/backend` and `stats/server`. The `/stats` endpoint gives you all of them
 in one go.
 
-## Stats via Kafka
+### Stats via Kafka
 
 Statistics are also published as Kafka topics. Configure a Kafka endpoint using the `-kakfaHost` and `-kafkaPort` flags.
 Stats are published as the following topics
