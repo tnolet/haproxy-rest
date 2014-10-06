@@ -4,9 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"flag"
 	"io/ioutil"
-	"fmt"
-	"encoding/json"
-	"sync"
+//	"fmt"
+//	"encoding/json"
+//	"sync"
 	"github.com/jcelliott/lumber"
 	"os"
 	"strconv"
@@ -52,17 +52,23 @@ func main() {
 	flag.Parse()
 
 
-	// some initial example config is loaded
-	s, err := ioutil.ReadFile("resources/config_example.json")
+	// load a persistent config, if any...
+	SetFileName("resources/persistent_config.json")
+	ConfigObj, err := GetConfigFromDisk()
 	if err != nil {
-		panic("Cannot find config file at location")
-	}
-	// example is parsed to a configuration object
-	err = json.Unmarshal(s, &ConfigObj)
-	if err != nil {
-		fmt.Println("Error parsing JSON")
+
+		log.Warn("Unable to load persistent config from disk")
+		log.Warn("Loading example config")
+
+		// set config temporarily to example config
+		SetFileName("resources/config_example.json")
+		ConfigObj, err = GetConfigFromDisk()
+		SetFileName("resources/persistent_config.json")
+
 	} else {
-		ConfigObj.Mutex = new(sync.RWMutex)
+
+		log.Info("Loading persistent configuration from disk...")
+
 	}
 
 	if ConfigObj.PidFile != *pidFile {
@@ -131,7 +137,7 @@ func main() {
 					default:
 						//update the config object with the new weight
 
-						ConfigObj = UpdateWeightInConfig(backend, server, weight, ConfigObj)
+						err = UpdateWeightInConfig(backend, server, weight, ConfigObj)
 
 						c.String(200,"Ok")
 					}
