@@ -30,7 +30,7 @@ listen stats :1988
 {{range .Frontends}}
 frontend {{.Name}}
     bind {{.BindIp}}:{{.BindPort}}
-    mode http
+    mode {{.Mode}}
     {{if .Options.HttpClose}} option http-server-close{{end}}
     use_backend {{.UseBackend}}
 {{end}}
@@ -38,13 +38,14 @@ frontend {{.Name}}
 
 {{range .Backends}}
 backend {{.Name}}
-    mode http
-    balance roundrobin
+    mode {{.Mode}}
+   {{ if eq .Mode "http" }} balance roundrobin {{end}}
+   {{ if eq .Mode "tcp" }} balance leastconn {{end}}
     option forwardfor
-    http-response set-header X-Vamp-Server %s
-    cookie vamp_srv insert httponly maxidle 5m maxlife 1h
-{{range .BackendServers}}
-	server {{.Name}} {{.Host}}:{{.Port}} cookie {{.Name}} weight {{.Weight}} maxconn {{.MaxConn}} {{if .Check}}check inter {{.CheckInterval}}{{end}} {{end}}
+   {{ if eq .Mode "http" }} http-response set-header X-Vamp-Server %s {{end}}
+   {{ if eq .Mode "http" }} cookie vamp_srv insert httponly maxidle 5m maxlife 1h {{end}}
+{{$mode := .Mode}}{{range .BackendServers}}
+	server {{.Name}} {{.Host}}:{{.Port}} {{if eq $mode "http" }} cookie {{.Name}} {{end}} weight {{.Weight}} maxconn {{.MaxConn}} {{if .Check}}check inter {{.CheckInterval}}{{end}} {{end}}
 {{if .Options.AbortOnClose}} option abortonclose{{end}}
 {{if .Options.AllBackups}} option allbackups{{end}}
 {{if .Options.CheckCache}} option checkcache{{end}}

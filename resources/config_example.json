@@ -5,15 +5,25 @@
             "bindPort" : 8000,
             "bindIp" : "0.0.0.0",
             "useBackend" : "testbe",
+            "mode" : "http",
             "options" : {
                 "httpClose" :  true
             }
+        },
+        {
+            "name" : "test_fe_2",
+            "bindPort" : 8001,
+            "bindIp" : "0.0.0.0",
+            "useBackend" : "testbe2",
+            "mode" : "tcp",
+            "options" : {}
         }
     ],
     "backends" : [
 
         {
             "name" : "testbe",
+            "mode" : "http",
             "servers" : [
                 {
                     "name" : "test_be_1",
@@ -33,6 +43,41 @@
                     "check" : false,
                     "checkInterval" : 10
                 }
+            ],
+            "options" : {
+                "abortOnClose" :  false,
+                "allBackups" :  false,
+                "checkCache" :  false,
+                "forwardFor" :  false,
+                "httpClose" :  false,
+                "httpCheck" :  false,
+                "ldapCheck" :  false,
+                "mysqlCheck" :  false,
+                "pgsqlCheck" :  false,
+                "redisCheck" :  false,
+                "smtpCheck" :  false,
+                "sslHelloCheck" :  false,
+                "tcpKeepAlive" :  false,
+                "tcpLog" :  false,
+                "tcpSmartAccept" :  false,
+                "tcpSmartConnect" :  false,
+                "transparent" :  false
+            }
+        },
+        {
+            "name" : "testbe2",
+            "mode" : "tcp",
+            "servers" : [
+                {
+                    "name" : "test_be2_1",
+                    "host" : "127.0.0.1",
+                    "port" : 1380,
+                    "weight" : 1,
+                    "maxconn" : 10,
+                    "check" : true,
+                    "checkInterval" : 10
+                }
+
             ],
             "options" : {
                 "abortOnClose" :  false,

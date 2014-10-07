@@ -51,7 +51,7 @@ func setUpProducer(host string, port int) {
 func pushMetrics(producer *sarama.Producer) {
 
 	// loop over this collection of metric types
-	metricTypes  := []string{ "frontend","backend","server" }
+	metricTypes  := []string{ "all","frontend","backend","server" }
 
 	for i := 0; i < 1; {
 

@@ -136,6 +136,7 @@ type Config struct {
 // Defines a single haproxy "backend".
 type Backend struct {
 	Name           string                    `json:"name"`
+	Mode		   string					 `json:"mode"`
 	BackendServers [] *BackendServer 		 `json:"servers"`
 	Options        ProxyOptions              `json:"options"`
 }
@@ -143,6 +144,7 @@ type Backend struct {
 // Defines a single haproxy "frontend".
 type Frontend struct {
 	Name           string                    `json:"name"`
+	Mode		   string					 `json:"mode"`
 	BindPort	   int			 			 `json:"bindPort"`
 	BindIp		   string			 	 	 `json:"bindIp"`
 	Options        ProxyOptions              `json:"options"`
