@@ -45,6 +45,7 @@ func main() {
 	configFile	 	:= flag.String("configFile", "resources/haproxy_new.cfg", "Location of the target HAproxy config file")
 	templateFile  	:= flag.String("template", "resources/haproxy_cfg.template", "Template file to build HAproxy config")
 	binary        	:= flag.String("binary", "/usr/local/bin/haproxy", "Path to the HAproxy binary")
+	kafkaSwitch		:= flag.String("kafkaSwitch","off", "Switch whether to enable Kafka streaming")
 	kafkaHost       := flag.String("kafkaHost", "localhost", "The hostname or ip address of the Kafka host")
 	kafkaPort       := flag.Int("kafkaPort",9092, "The port of the Kafka host")
 	pidFile       	:= flag.String("pidFile", "resources/haproxy-private.pid", "Location of the HAproxy PID file")
@@ -97,8 +98,13 @@ func main() {
 
 	}
 
-	// Setup Kafka producer
-	setUpProducer(*kafkaHost, *kafkaPort)
+	if *kafkaSwitch == "on" {
+
+		// Setup Kafka producer
+		setUpProducer(*kafkaHost, *kafkaPort)
+
+	}
+
 
 	log.Info("Starting REST server")
 	// initialize the web stack
