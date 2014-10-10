@@ -67,8 +67,8 @@ func AddServiceToConfig(name string, bindPort int, endPoint string, mode string,
 	service.EndPoint = endPoint
 	service.Mode = mode
 
-	newElement := make([]*Service, 1)
-	newElement[0] = &service
+	newServiceSlice := make([]*Service, 1)
+	newServiceSlice[0] = &service
 
 	n := len(config.Services)
 	//total := n + 1
@@ -78,7 +78,8 @@ func AddServiceToConfig(name string, bindPort int, endPoint string, mode string,
 		copy(newSlice, config.Services)
 		config.Services = newSlice
 	}
-	config.Services = append(config.Services, newElement[0])
+	log.Info("Adding service " + newServiceSlice[0].Name +  " to config")
+	config.Services = append(config.Services, newServiceSlice[0])
 
 
 	err := RenderConfig(config)

@@ -65,11 +65,14 @@ func (z ZookeeperClient) watchHandler(conn *zk.Conn, snapshots chan []string, er
 					knownServices = AppendString(knownServices, knownService.Name)
 				}
 
+				// check if there are new services in Zookeeper compared to our local config,
+				// if so, add it to the config
 				for _, service := range snapshot {
 
 					if stringInSlice(service, knownServices) {
 
-						log.Debug("Allready know service: " + service)
+						log.Debug("Already know service: " + service)
+
 					} else {
 						result,_, err := conn.Get("/magnetic/" + service)
 						must(err)
@@ -79,6 +82,24 @@ func (z ZookeeperClient) watchHandler(conn *zk.Conn, snapshots chan []string, er
 
 						err = AddServiceToConfig(s.Name, s.BindPort, s.EndPoint, s.Mode, ConfigObj)
 						must(err)
+
+					}
+
+				}
+
+				// check if there are service in our local config no longer in Zookeeper,
+				// if so, remove them from the config
+
+				for _, knownService := range knownServices {
+
+					if stringInSlice(knownService, snapshot) {
+
+						log.Info("Services are matched, no removal triggered")
+
+					} else {
+
+						log.Info("Service " + knownService + "is not in Zookeeper anymore. Removing from proxy config.")
+						RemoveServiceFromConfig(knownService, ConfigObj)
 
 					}
 
