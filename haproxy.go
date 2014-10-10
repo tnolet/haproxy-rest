@@ -13,6 +13,22 @@ import (
 	"strconv"
 )
 
+
+var Binary string
+var PidFile string
+
+
+func SetPidFileName(c string) error {
+	PidFile = c
+	return nil
+}
+
+func SetBinaryFileName(c string) error {
+	Binary = c
+	return nil
+}
+
+
 // Executes a arbitrariry HAproxy command on the unix socket
 func HaproxyCmd(cmd string) (string, error){
 
@@ -115,9 +131,9 @@ func GetStats(statsType string) ([]StatsGroup, error) {
  */
 
 // Configuration reload
-func Reload(binary, config, pidfile string) error {
+func Reload() error {
 
-	pid, err := ioutil.ReadFile(pidfile)
+	pid, err := ioutil.ReadFile(PidFile)
 	if err !=nil {
 		return err
 	}
@@ -127,9 +143,9 @@ func Reload(binary, config, pidfile string) error {
 
 	*/
 	arg0 := "-f"
-	arg1 := config
+	arg1 := ConfigFile
 	arg2 := "-p"
-	arg3 := pidfile
+	arg3 := PidFile
 	arg4 := "-D"
 	arg5 := "-sf"
 	arg6 := strings.Trim(string(pid),"\n")
@@ -137,9 +153,9 @@ func Reload(binary, config, pidfile string) error {
 
 	// If this is the first run, the PID value will be empty, otherwise it will be > 0
 	if len(arg6) > 0 {
-		cmd = exec.Command(binary, arg0, arg1 ,arg2, arg3, arg4, arg5, arg6)
+		cmd = exec.Command(Binary, arg0, arg1 ,arg2, arg3, arg4, arg5)
 	} else {
-		cmd = exec.Command(binary, arg0, arg1 ,arg2, arg3 )
+		cmd = exec.Command(Binary, arg0, arg1 ,arg2, arg3 )
 	}
 	var out bytes.Buffer
 	cmd.Stdout = &out

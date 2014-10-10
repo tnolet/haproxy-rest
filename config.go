@@ -10,6 +10,27 @@ import (
 )
 
 var LocalFilename string
+var TemplateFile string
+var ConfigFile string
+
+
+func SetFileName(c string) error {
+	LocalFilename = c
+	return nil
+}
+
+func SetTemplateFileName(c string) error {
+	TemplateFile = c
+	return nil
+}
+
+func SetConfigFileName(c string) error {
+	ConfigFile = c
+	return nil
+}
+
+
+
 
 
 // updates the weight of a server of a specific backend with a new weight
@@ -33,14 +54,50 @@ func UpdateWeightInConfig(backend string, server string, weight int, config *Con
 	return err
 }
 
+// adds a service for the local proxy based
+
+func AddServiceToConfig(name string, bindPort int, endPoint string, mode string, config *Config) error {
+
+	config.Mutex.RLock()
+	defer config.Mutex.RUnlock()
+
+	var service Service
+	service.Name = name
+	service.BindPort = bindPort
+	service.EndPoint = endPoint
+	service.Mode = mode
+
+	newElement := make([]*Service, 1)
+	newElement[0] = &service
+
+	n := len(config.Services)
+	//total := n + 1
+
+	if n > cap(config.Services) { // if necessary, reallocate
+		newSlice := make([]*Service, (n+1))
+		copy(newSlice, config.Services)
+		config.Services = newSlice
+	}
+	config.Services = append(config.Services, newElement[0])
+
+	log.Info("Adding service " + newElement[0].Name +  " to config")
+
+	err := RenderConfig(config)
+	must(err)
+	err = Reload()
+	return err
+
+
+}
+
 // Render a config object to a HAproxy config file
-func RenderConfig(outFile string, templateFile string, config *Config) error {
-	f, err := ioutil.ReadFile(templateFile)
+func RenderConfig(config *Config) error {
+	f, err := ioutil.ReadFile(TemplateFile)
 	if err != nil {
 		return err
 	}
 
-	fp, err := os.OpenFile(outFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	fp, err := os.OpenFile(ConfigFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
 	}
@@ -57,18 +114,12 @@ func RenderConfig(outFile string, templateFile string, config *Config) error {
 		return err
 	}
 
-	t := template.Must(template.New(templateFile).Parse(string(f)))
+	t := template.Must(template.New(TemplateFile).Parse(string(f)))
 	err = t.Execute(fp, &config)
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
-
-
-func SetFileName(c string) error {
-	LocalFilename = c
 	return nil
 }
 
