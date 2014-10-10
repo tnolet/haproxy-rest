@@ -80,13 +80,35 @@ func AddServiceToConfig(name string, bindPort int, endPoint string, mode string,
 	}
 	config.Services = append(config.Services, newElement[0])
 
-	log.Info("Adding service " + newElement[0].Name +  " to config")
 
 	err := RenderConfig(config)
 	must(err)
 	err = Reload()
 	return err
 
+
+}
+
+func RemoveServiceFromConfig(name string, config *Config) error {
+
+	config.Mutex.RLock()
+	defer config.Mutex.RUnlock()
+
+	i := 0
+	for _, service := range config.Services {
+
+		if service.Name == name {
+
+			log.Info("Removing service " + name +  " from config")
+			config.Services = append(config.Services[:i], config.Services[i+1:]...)
+		}
+		i++
+	}
+
+	err := RenderConfig(config)
+	must(err)
+	err = Reload()
+	return err
 
 }
 
