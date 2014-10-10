@@ -139,7 +139,7 @@ func Reload() error {
 	}
 
 	/* 	Setup all the command line parameters so we get an executable similar to
-		/usr/local/bin/haproxy -f resources/haproxy_new.cfg -p resources/haproxy-private.pid -st 1234
+		/usr/local/bin/haproxy -f resources/haproxy_new.cfg -p resources/haproxy-private.pid -sf 1234
 
 	*/
 	arg0 := "-f"
@@ -153,9 +153,9 @@ func Reload() error {
 
 	// If this is the first run, the PID value will be empty, otherwise it will be > 0
 	if len(arg6) > 0 {
-		cmd = exec.Command(Binary, arg0, arg1 ,arg2, arg3, arg4, arg5)
+		cmd = exec.Command(Binary, arg0, arg1 ,arg2, arg3, arg4, arg5, arg6)
 	} else {
-		cmd = exec.Command(Binary, arg0, arg1 ,arg2, arg3 )
+		cmd = exec.Command(Binary, arg0, arg1 ,arg2, arg3, arg4 )
 	}
 	var out bytes.Buffer
 	cmd.Stdout = &out
