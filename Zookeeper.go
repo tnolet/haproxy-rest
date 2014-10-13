@@ -82,9 +82,7 @@ func (z ZookeeperClient) watchHandler(conn *zk.Conn, snapshots chan []string, er
 
 						err = AddServiceToConfig(s.Name, s.BindPort, s.EndPoint, s.Mode, ConfigObj)
 						must(err)
-
 					}
-
 				}
 
 				// check if there are service in our local config no longer in Zookeeper,
@@ -100,13 +98,24 @@ func (z ZookeeperClient) watchHandler(conn *zk.Conn, snapshots chan []string, er
 
 						log.Info("Service " + knownService + "is not in Zookeeper anymore. Removing from proxy config.")
 						RemoveServiceFromConfig(knownService, ConfigObj)
-
 					}
-
 				}
 
 			case err := <-errors:
-				log.Error(err.Error())
+				log.Error("Caught errror from Zookeeper" + err.Error())
+
+				// if sesssion is expired, reconnect.
+				if (err == zk.ErrSessionExpired) {
+					log.Error("Session was expired. Should restart")
+					conn.Close()
+
+					zkConnection := zkClient.connect()
+					defer zkConnection.Close()
+
+					snapshots, errors := zkClient.watchServiceTypes(zkConnection,"/magnetic")
+					zkClient.watchHandler(zkConnection, snapshots, errors)
+
+				}
 			}
 		}
 	}()
