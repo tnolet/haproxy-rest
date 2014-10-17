@@ -29,10 +29,6 @@ func SetConfigFileName(c string) error {
 	return nil
 }
 
-
-
-
-
 // updates the weight of a server of a specific backend with a new weight
 func UpdateWeightInConfig(backend string, server string, weight int, config *Config) error {
 
@@ -52,65 +48,6 @@ func UpdateWeightInConfig(backend string, server string, weight int, config *Con
 
 	err := WriteConfigToDisk(config)
 	return err
-}
-
-// adds a service for the local proxy based
-
-func AddServiceToConfig(name string, bindPort int, endPoint string, mode string, config *Config) error {
-
-	config.Mutex.RLock()
-	defer config.Mutex.RUnlock()
-
-	var service Service
-	service.Name = name
-	service.BindPort = bindPort
-	service.EndPoint = endPoint
-	service.Mode = mode
-
-	newServiceSlice := make([]*Service, 1)
-	newServiceSlice[0] = &service
-
-	n := len(config.Services)
-	//total := n + 1
-
-	if n > cap(config.Services) { // if necessary, reallocate
-		newSlice := make([]*Service, (n+1))
-		copy(newSlice, config.Services)
-		config.Services = newSlice
-	}
-	log.Info("Adding service " + newServiceSlice[0].Name +  " to config")
-	config.Services = append(config.Services, newServiceSlice[0])
-
-
-	err := RenderConfig(config)
-	must(err)
-	err = Reload()
-	return err
-
-
-}
-
-func RemoveServiceFromConfig(name string, config *Config) error {
-
-	config.Mutex.RLock()
-	defer config.Mutex.RUnlock()
-
-	i := 0
-	for _, service := range config.Services {
-
-		if service.Name == name {
-
-			log.Info("Removing service " + name +  " from config")
-			config.Services = append(config.Services[:i], config.Services[i+1:]...)
-		}
-		i++
-	}
-
-	err := RenderConfig(config)
-	must(err)
-	err = Reload()
-	return err
-
 }
 
 // Render a config object to a HAproxy config file
@@ -174,3 +111,23 @@ func WriteConfigToDisk(config *Config) error {
 	return nil
 }
 
+
+func RenderLocalProxyConfig(payload []byte, conf *Config) {
+
+	json.Unmarshal(payload, conf)
+	err := RenderConfig(ConfigObj)
+	if err != nil {
+		log.Error("Error rendering config file")
+		return
+	} else {
+		err = Reload()
+		if err != nil {
+			log.Error("Error reloading the HAproxy configuration")
+			return
+		} else {
+			log.Info("Successfully reloaded HAproxy configuration")
+		}
+
+	}
+
+}

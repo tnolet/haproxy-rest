@@ -1,1 +1,1 @@
-{"Frontends":null,"backends":null,"services":[{"name":"vrn-development-service-3f04fc6c","bindPort":21000,"endPoint":"123.123.123.123","mode":"tcp"},{"name":"vrn-development-service-f2a37f7e","bindPort":21000,"endPoint":"123.123.123.123","mode":"tcp"}]}
+{"Frontends":[],"backends":[],"services":[]}

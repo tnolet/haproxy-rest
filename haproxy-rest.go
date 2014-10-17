@@ -70,7 +70,7 @@ func main() {
 		SetConfigFileName(*lbConfigFile)
 
 
-	} else if * mode == "localproxy" {
+	} else if *mode == "localproxy" {
 
 		log.Info(" ==> Starting in Local Proxy mode <==")
 
@@ -85,8 +85,7 @@ func main() {
 		zkConnection := zkClient.connect()
 		defer zkConnection.Close()
 
-		snapshots, errors := zkClient.watchServiceTypes(zkConnection,"/magnetic")
-		zkClient.watchHandler(zkConnection, snapshots, errors)
+		zkClient.watchLocalProxyConfig(zkConnection,"/magnetic/localproxy")
 
 
 	} else {
