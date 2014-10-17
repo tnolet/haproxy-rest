@@ -4,6 +4,14 @@ import(
 	"sync"
 )
 
+type Metric struct {
+
+	Name string `json:"name"`
+	Value string `json:"value"`
+	Timestamp int64 `json:"timestamp"`
+
+}
+
 // Struct to hold the output from the /stats endpoint
 type StatsGroup struct {
 	Pxname string `json:"pxname"`

@@ -4,6 +4,8 @@ import (
 	"strconv"
 	"encoding/json"
 	"time"
+	"strings"
+	"reflect"
 )
 
 
@@ -53,28 +55,55 @@ func setUpProducer(host string, port int, mode string) {
 // pushMetrics pushes the load balancer statistic to a Kafka Topic
 func pushMetrics(producer *sarama.Producer, mode string) {
 
-	// loop over this collection of metric types
-	metricTypes  := []string{ "all","frontend","backend","server" }
+	// The list of metrics we want to filter out of the total stats dump from haproxy
+	wantedMetrics  := []string{ "Scur", "Qcur","Smax","Slim","Status","Weight","Qtime","Ctime","Rtime","Ttime","Req_rate","Req_rate_max","Req_tot","Rate","Rate_lim","Rate_max" }
+
+	// get metrics every second, for ever.
+	for  {
+
+			stats, _ := GetStats("all")
+		    localTime := int64(time.Now().Unix())
 
 
-	for i := 0; i < 1; {
+		// for each proxy in the stats dump, pick out the wanted metrics, parse them and send 'm to Kafka
+			for _,proxy := range stats {
 
-		for _,metricType := range metricTypes {
+				// filter out the metrics for haproxy's own stats page
+				if (proxy.Pxname != "stats") {
 
-			stats, _ := GetStats(metricType)
-			statsJson, _ := json.Marshal(stats)
+					// loop over all wanted metrics for the current proxy
+					for _,metric := range wantedMetrics {
 
-			// prepend the metrics with the mode
-			err := producer.SendMessage(mode + "." + metricType, nil, sarama.StringEncoder(statsJson))
-			if err != nil {
+						fullMetricName := proxy.Pxname + "." + strings.ToLower(proxy.Svname) + "." + strings.ToLower(metric)
+						field  := reflect.ValueOf(proxy).FieldByName(metric)
+						metricValue := field.String()
+						if (metricValue == "") { metricValue = "0"}
+						//log.Info( localTime + " " + fullMetricName + " : " + metricValue)
 
-				log.Error("Error sending message to Kafka " + err.Error())
+						metricObj := Metric{fullMetricName, metricValue, localTime}
+						jsonObj,_ := json.MarshalIndent(metricObj,""," ")
 
-			} else {
-				log.Debug("Successfully sent message to Kafka on topic: " + metricType)
+						err := producer.SendMessage(mode + "." + "all", sarama.StringEncoder("lbmetrics"), sarama.StringEncoder(jsonObj))
+						if err != nil {
+
+							log.Error("Error sending message to Kafka " + err.Error())
+
+						} else {
+							log.Debug("Successfully sent message to Kafka on topic: "  + mode + "." + "all")
+						}
+
+
+					}
+
+				}
+
+
 			}
 
-		}
-		time.Sleep(1000 * time.Millisecond)
+
+
+
+
+		time.Sleep(3000 * time.Millisecond)
 	}
 }
