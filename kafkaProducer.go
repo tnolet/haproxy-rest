@@ -56,7 +56,7 @@ func setUpProducer(host string, port int, mode string) {
 func pushMetrics(producer *sarama.Producer, mode string) {
 
 	// The list of metrics we want to filter out of the total stats dump from haproxy
-	wantedMetrics  := []string{ "Scur", "Qcur","Smax","Slim","Status","Weight","Qtime","Ctime","Rtime","Ttime","Req_rate","Req_rate_max","Req_tot","Rate","Rate_lim","Rate_max" }
+	wantedMetrics  := []string{ "Scur", "Qcur","Smax","Slim","Weight","Qtime","Ctime","Rtime","Ttime","Req_rate","Req_rate_max","Req_tot","Rate","Rate_lim","Rate_max" }
 
 	// get metrics every second, for ever.
 	for  {
@@ -75,23 +75,24 @@ func pushMetrics(producer *sarama.Producer, mode string) {
 					for _,metric := range wantedMetrics {
 
 						fullMetricName := proxy.Pxname + "." + strings.ToLower(proxy.Svname) + "." + strings.ToLower(metric)
-						field  := reflect.ValueOf(proxy).FieldByName(metric)
-						metricValue := field.String()
-						if (metricValue == "") { metricValue = "0"}
-						//log.Info( localTime + " " + fullMetricName + " : " + metricValue)
+						field  := reflect.ValueOf(proxy).FieldByName(metric).String()
+						if (field != "") {
 
-						metricObj := Metric{fullMetricName, metricValue, localTime}
-						jsonObj,_ := json.MarshalIndent(metricObj,""," ")
+							metricValue,_ := strconv.Atoi(field)
+							log.Info(string(localTime) + " " + fullMetricName + " : " + field)
 
-						err := producer.SendMessage(mode + "." + "all", sarama.StringEncoder("lbmetrics"), sarama.StringEncoder(jsonObj))
-						if err != nil {
+							metricObj := Metric{fullMetricName, metricValue, localTime}
+							jsonObj, _ := json.MarshalIndent(metricObj, "", " ")
 
-							log.Error("Error sending message to Kafka " + err.Error())
+							err := producer.SendMessage(mode+"."+"all", sarama.StringEncoder("lbmetrics"), sarama.StringEncoder(jsonObj))
+							if err != nil {
 
-						} else {
-							log.Debug("Successfully sent message to Kafka on topic: "  + mode + "." + "all")
+								log.Error("Error sending message to Kafka " + err.Error())
+
+							} else {
+								log.Debug("Successfully sent message to Kafka on topic: " + mode + "." + "all")
+							}
 						}
-
 
 					}
 

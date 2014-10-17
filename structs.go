@@ -7,7 +7,7 @@ import(
 type Metric struct {
 
 	Name string `json:"name"`
-	Value string `json:"value"`
+	Value int `json:"value"`
 	Timestamp int64 `json:"timestamp"`
 
 }
