@@ -1,0 +1,10 @@
+{
+    "services": [
+        {
+            "name": "test_service",
+            "bindPort": 21000,
+            "endPoint": "10.243.82.119",
+            "mode": "tcp"
+        }
+    ]
+}

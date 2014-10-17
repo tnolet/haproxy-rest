@@ -4,9 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"flag"
 	"io/ioutil"
-//	"fmt"
-//	"encoding/json"
-//	"sync"
 	"github.com/jcelliott/lumber"
 	"os"
 	"strconv"
@@ -30,6 +27,7 @@ var (
 	logFile, _ = lumber.NewFileLogger("/tmp/haproxy-rest.log", lumber.INFO, lumber.ROTATE, 1000, 3, 100)
 	logConsole = lumber.NewConsoleLogger(lumber.INFO)
 	log = lumber.NewMultiLogger()
+	zkClient ZookeeperClient
 )
 
 func main() {
@@ -42,19 +40,63 @@ func main() {
 
 	// implicit -h prints out help messages
 	port            := flag.Int("port",10001, "Port/IP to use for the REST interface. Overrides $PORT0 env variable")
-	configFile	 	:= flag.String("configFile", "resources/haproxy_new.cfg", "Location of the target HAproxy config file")
-	templateFile  	:= flag.String("template", "resources/haproxy_cfg.template", "Template file to build HAproxy config")
+	lbConfigFile	:= flag.String("lbConfigFile", "resources/haproxy_new.cfg", "Location of the target HAproxy config file")
+	lbTemplateFile  := flag.String("lbTemplate", "resources/haproxy_cfg.template", "Template file to build HAproxy load balancer config")
+	proxyTemplateFile := flag.String("proxyTemplate", "resources/haproxy_localproxy_cfg.template", "Template file to build HAproxy local proxy config")
+	proxyConfigFile  := flag.String("proxyConfigFile", "resources/haproxy_localproxy_new.cfg", "Location of the target HAproxy localproxy config")
 	binary        	:= flag.String("binary", "/usr/local/bin/haproxy", "Path to the HAproxy binary")
 	kafkaSwitch		:= flag.String("kafkaSwitch","off", "Switch whether to enable Kafka streaming")
 	kafkaHost       := flag.String("kafkaHost", "localhost", "The hostname or ip address of the Kafka host")
 	kafkaPort       := flag.Int("kafkaPort",9092, "The port of the Kafka host")
+	mode			:= flag.String("mode","loadbalancer", "Switch for \"loadbalancer\" or \"localproxy\" mode")
+    zooConString    := flag.String("zooConString", "localhost", "A zookeeper ensemble connection string")
 	pidFile       	:= flag.String("pidFile", "resources/haproxy-private.pid", "Location of the HAproxy PID file")
 
 	flag.Parse()
 
 
+	// set intial values based on the mode chosen
+
+	var perstConfFile = ""
+	var exampleFile = ""
+
+	if *mode == "loadbalancer" {
+
+		log.Info(" ==> Starting in Load Balancer mode <==")
+
+		perstConfFile = "resources/persistent_lb_config.json"
+		exampleFile   = "resources/config_example.json"
+		SetTemplateFileName(*lbTemplateFile)
+		SetConfigFileName(*lbConfigFile)
+
+
+	} else if *mode == "localproxy" {
+
+		log.Info(" ==> Starting in Local Proxy mode <==")
+
+		perstConfFile = "resources/persistent_localproxy_config.json"
+		exampleFile   = "resources/config_localproxy_example.json"
+		SetTemplateFileName(*proxyTemplateFile)
+		SetConfigFileName(*proxyConfigFile)
+
+		zkClient = ZookeeperClient{*zooConString}
+
+		log.Info("Connecting to Zookeeper ensemble on " + *zooConString)
+		zkConnection := zkClient.connect()
+		defer zkConnection.Close()
+
+		zkClient.watchLocalProxyConfig(zkConnection,"/magnetic/localproxy")
+
+
+	} else {
+
+		log.Error("No correct mode chosen. Please choose either \"loadbalancer\" or \"localproxy\"")
+		os.Exit(1)
+	}
+
 	// load a persistent config, if any...
-	SetFileName("resources/persistent_config.json")
+	SetFileName(perstConfFile)
+
 	ConfigObj, err := GetConfigFromDisk()
 	if err != nil {
 
@@ -62,9 +104,9 @@ func main() {
 		log.Warn("Loading example config")
 
 		// set config temporarily to example config
-		SetFileName("resources/config_example.json")
+		SetFileName(exampleFile)
 		ConfigObj, err = GetConfigFromDisk()
-		SetFileName("resources/persistent_config.json")
+		SetFileName(perstConfFile)
 
 	} else {
 
@@ -84,13 +126,15 @@ func main() {
 		ioutil.WriteFile(*pidFile, emptyPid, 0644)
 	}
 
+	SetPidFileName(*pidFile)
+	SetBinaryFileName(*binary)
 
-	err = RenderConfig(*configFile, *templateFile, ConfigObj)
+	err = RenderConfig(ConfigObj)
 	if err != nil {
 		log.Error("Error rendering config file")
 		return
 	} else {
-		err = Reload(*binary, *configFile, *pidFile)
+		err = Reload()
 		if err != nil {
 			log.Error("Error reloading the HAproxy configuration")
 			return
@@ -101,7 +145,7 @@ func main() {
 	if *kafkaSwitch == "on" {
 
 		// Setup Kafka producer
-		setUpProducer(*kafkaHost, *kafkaPort)
+		setUpProducer(*kafkaHost, *kafkaPort, *mode)
 
 	}
 
@@ -211,12 +255,12 @@ func main() {
 		v1.POST("/config", func(c *gin.Context){
 
 				c.Bind(&ConfigObj)
-				err = RenderConfig(*configFile, *templateFile, ConfigObj)
+				err = RenderConfig(ConfigObj)
 				if err != nil {
 					c.String(500, "Error rendering config file")
 					return
 				} else {
-					err = Reload(*binary, *configFile, *pidFile)
+					err = Reload()
 					if err != nil {
 						c.String(500, "Error reloading the HAproxy configuration")
 						return

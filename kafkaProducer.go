@@ -7,14 +7,17 @@ import (
 )
 
 
-func setUpProducer(host string, port int) {
+func setUpProducer(host string, port int, mode string) {
 
 	connection := host + ":" + strconv.Itoa(port)
 
 	log.Info("Connecting to Kafka on " + connection + "...")
 
+	clientConfig := sarama.NewClientConfig()
+	clientConfig.WaitForElection = (10 * time.Second)
 
-	client, err := sarama.NewClient("client_id", []string{connection}, sarama.NewClientConfig())
+
+	client, err := sarama.NewClient("client_id", []string{connection}, clientConfig)
 	if err != nil {
 		panic(err)
 	} else {
@@ -27,31 +30,32 @@ func setUpProducer(host string, port int) {
 	producerConfig := sarama.NewProducerConfig()
 
 	// if delivering messages async,  buffer them for at most MaxBufferTime
-	producerConfig.MaxBufferTime = (1000 * time.Millisecond)
+	producerConfig.MaxBufferTime = (2 * time.Second)
 
 	// max bytes in buffer
 	producerConfig.MaxBufferedBytes = 51200
 
 	// Use zip compression
-	producerConfig.Compression = 1
+	producerConfig.Compression = 0
 
-	// We are just streaming metrics, so don't not wait for any Kafka Acks. TCP will do.
-	producerConfig.RequiredAcks = 0
+	// We are just streaming metrics, so don't not wait for any Kafka Acks.
+	producerConfig.RequiredAcks = -1
 
 	producer, err := sarama.NewProducer(client, producerConfig)
 	if err != nil {
 		panic(err)
 	}
 
-	go pushMetrics(producer)
+	go pushMetrics(producer,mode)
 
 }
 
 // pushMetrics pushes the load balancer statistic to a Kafka Topic
-func pushMetrics(producer *sarama.Producer) {
+func pushMetrics(producer *sarama.Producer, mode string) {
 
 	// loop over this collection of metric types
 	metricTypes  := []string{ "all","frontend","backend","server" }
+
 
 	for i := 0; i < 1; {
 
@@ -60,7 +64,8 @@ func pushMetrics(producer *sarama.Producer) {
 			stats, _ := GetStats(metricType)
 			statsJson, _ := json.Marshal(stats)
 
-			err := producer.SendMessage("loadbalancer." + metricType, nil, sarama.StringEncoder(statsJson))
+			// prepend the metrics with the mode
+			err := producer.SendMessage(mode + "." + metricType, nil, sarama.StringEncoder(statsJson))
 			if err != nil {
 
 				log.Error("Error sending message to Kafka " + err.Error())

@@ -10,7 +10,24 @@ import (
 )
 
 var LocalFilename string
+var TemplateFile string
+var ConfigFile string
 
+
+func SetFileName(c string) error {
+	LocalFilename = c
+	return nil
+}
+
+func SetTemplateFileName(c string) error {
+	TemplateFile = c
+	return nil
+}
+
+func SetConfigFileName(c string) error {
+	ConfigFile = c
+	return nil
+}
 
 // updates the weight of a server of a specific backend with a new weight
 func UpdateWeightInConfig(backend string, server string, weight int, config *Config) error {
@@ -34,13 +51,13 @@ func UpdateWeightInConfig(backend string, server string, weight int, config *Con
 }
 
 // Render a config object to a HAproxy config file
-func RenderConfig(outFile string, templateFile string, config *Config) error {
-	f, err := ioutil.ReadFile(templateFile)
+func RenderConfig(config *Config) error {
+	f, err := ioutil.ReadFile(TemplateFile)
 	if err != nil {
 		return err
 	}
 
-	fp, err := os.OpenFile(outFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	fp, err := os.OpenFile(ConfigFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
 	}
@@ -57,18 +74,12 @@ func RenderConfig(outFile string, templateFile string, config *Config) error {
 		return err
 	}
 
-	t := template.Must(template.New(templateFile).Parse(string(f)))
+	t := template.Must(template.New(TemplateFile).Parse(string(f)))
 	err = t.Execute(fp, &config)
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
-
-
-func SetFileName(c string) error {
-	LocalFilename = c
 	return nil
 }
 
@@ -100,3 +111,23 @@ func WriteConfigToDisk(config *Config) error {
 	return nil
 }
 
+
+func RenderLocalProxyConfig(payload []byte, conf *Config) {
+
+	json.Unmarshal(payload, conf)
+	err := RenderConfig(ConfigObj)
+	if err != nil {
+		log.Error("Error rendering config file")
+		return
+	} else {
+		err = Reload()
+		if err != nil {
+			log.Error("Error reloading the HAproxy configuration")
+			return
+		} else {
+			log.Info("Successfully reloaded HAproxy configuration")
+		}
+
+	}
+
+}

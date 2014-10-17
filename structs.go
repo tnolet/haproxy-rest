@@ -122,16 +122,41 @@ type Info struct {
 	description string `json:"description"`
 }
 
-
-// Main configuration object. This contains all variables and is passed to
+// Main configuration object for load balancers. This contains all variables and is passed to
 // the templating engine.
 type Config struct {
-	Frontends [] *Frontend			`json:frontends"`
-	Backends [] *Backend 			`json:"backends"`
-	PidFile  string              	`json:"-"`
-	Mutex    *sync.RWMutex       	`json:"-"`
+	Frontends [] 	*Frontend			`json:frontends"`
+	Backends [] 	*Backend 			`json:"backends"`
+	Services[]		*Service			`json:"services"`
+	PidFile  		string              	`json:"-"`
+	Mutex    		*sync.RWMutex       	`json:"-"`
+	templateFile    *string       			`json:"-"`
+	configFile    	*string       			`json:"-"`
 }
 
+func (f *Config) SetPid(pid string) {
+	f.PidFile = pid
+}
+
+func (f *Config) GetPid()(string) {
+	return f.PidFile
+}
+
+type Foo struct {
+	name string
+}
+
+func (f *Foo) SetName(name string) {
+	f.name = name
+}
+
+type Service struct {
+
+	Name           	string                  `json:"name"`
+	BindPort		int						`json:"bindPort"`
+	EndPoint		string					`json:"endPoint"`
+	Mode			string					`json:"mode"`
+}
 
 // Defines a single haproxy "backend".
 type Backend struct {
