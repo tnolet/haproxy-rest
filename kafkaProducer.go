@@ -79,7 +79,6 @@ func pushMetrics(producer *sarama.Producer, mode string) {
 						if (field != "") {
 
 							metricValue,_ := strconv.Atoi(field)
-							log.Info(string(localTime) + " " + fullMetricName + " : " + field)
 
 							metricObj := Metric{fullMetricName, metricValue, localTime}
 							jsonObj, _ := json.MarshalIndent(metricObj, "", " ")
