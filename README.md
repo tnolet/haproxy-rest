@@ -78,11 +78,27 @@ in one go.
 ### Stats via Kafka
 
 Statistics are also published as Kafka topics. Configure a Kafka endpoint using the `-kakfaHost` and `-kafkaPort` flags.
-Stats are published as the following topics
+Stats are published as the following topic:
 
-- loadbalancer.frontend
-- loadbalancer.backend
-- loadbalancer.server
+- loadbalancer.all
+
+The messages on that topic are json strings, where the "name" key indicates what metric type from which proxy
+ you are dealing with, i.e.:
+
+    {
+     "name": "testbe.test_be_1.rate",
+     "value": "2",
+     "timestamp": 1413546338
+    }
+    {
+     "name": "testbe.test_be_1.rate_lim",
+     "value": "12",
+     "timestamp": 1413546338
+    }
+    { "name": "testbe.test_be_1.rate_max",
+     "value": "30",
+     "timestamp": 1413546338
+    }
 
             
 ### Updating the configuration
