@@ -133,7 +133,7 @@ type Info struct {
 // Main configuration object for load balancers. This contains all variables and is passed to
 // the templating engine.
 type Config struct {
-	Frontends [] 	*Frontend			`json:frontends"`
+	Frontends [] 	*Frontend			`json:"frontends"`
 	Backends [] 	*Backend 			`json:"backends"`
 	Services[]		*Service			`json:"services"`
 	PidFile  		string              	`json:"-"`
@@ -181,7 +181,9 @@ type Frontend struct {
 	BindPort	   int			 			 `json:"bindPort"`
 	BindIp		   string			 	 	 `json:"bindIp"`
 	Options        ProxyOptions              `json:"options"`
-	UseBackend	   string		 			 `json:"useBackend"`
+	DefaultBackend string					 `json:"defaultBackend"`
+	UseBackends	   [] *UseBackend		 	 `json:"useBackends"`
+	ACLs		   [] *ACL					 `json:"acls"`
 }
 
 
@@ -215,4 +217,18 @@ type BackendServer struct {
 	MaxConn       int    `json:"maxconn"`
 	Check         bool   `json:"check"`
 	CheckInterval int    `json:"checkInterval"`
+}
+
+// Defines an ACL
+type ACL struct {
+
+	Name		string `json:"name"`
+	Pattern		string `json:"pattern"`
+
+}
+
+// defines a "use_backend" option. This normally hooks into an ACL
+type UseBackend struct {
+	Backend		string `json:"backend"`
+	Condition	string `json:"condition"`
 }
