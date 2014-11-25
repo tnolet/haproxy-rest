@@ -50,6 +50,25 @@ func UpdateWeightInConfig(backend string, server string, weight int, config *Con
 	return err
 }
 
+func GetACLsFromConfig(frontend string, config *Config) [] *ACL {
+
+	config.Mutex.RLock()
+	defer config.Mutex.RUnlock()
+
+	var acls [] *ACL
+
+	for _, fe := range config.Frontends {
+		fmt.Printf(fe.Name)
+		if fe.Name == frontend {
+			 acls = fe.ACLs
+
+			}
+		}
+
+return acls
+
+}
+
 // Render a config object to a HAproxy config file
 func RenderConfig(config *Config) error {
 	f, err := ioutil.ReadFile(TemplateFile)

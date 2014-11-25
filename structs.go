@@ -170,6 +170,7 @@ type Service struct {
 type Backend struct {
 	Name           string                    `json:"name"`
 	Mode		   string					 `json:"mode"`
+	ACLs		   [] *ACL					 `json:"acls"`
 	BackendServers [] *BackendServer 		 `json:"servers"`
 	Options        ProxyOptions              `json:"options"`
 }

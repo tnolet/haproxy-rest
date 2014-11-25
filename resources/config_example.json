@@ -4,42 +4,54 @@
             "name" : "test_fe_1",
             "bindPort" : 8000,
             "bindIp" : "0.0.0.0",
-            "useBackend" : "testbe",
+            "defaultBackend" : "testbe1",
             "mode" : "http",
             "options" : {
                 "httpClose" :  true
-            }
-        },
-        {
-            "name" : "test_fe_2",
-            "bindPort" : 8001,
-            "bindIp" : "0.0.0.0",
-            "useBackend" : "testbe2",
-            "mode" : "tcp",
-            "options" : {}
+            },
+            "useBackends" : [
+                {
+                    "backend" : "testbe2",
+                    "condition" : "if uses_internetexplorer"
+                },
+                {
+                    "backend" : "testbe1",
+                    "condition" : "if condition_1"
+                }
+            ],
+            "acls" : [
+                {
+                    "name" : "uses_internetexplorer",
+                    "pattern" : "hdr_sub(user-agent) MSIE"
+                },
+                {
+                    "name" : "condition_1",
+                    "pattern" : "url_beg"
+                }
+            ]
         }
     ],
     "backends" : [
 
         {
-            "name" : "testbe",
+            "name" : "testbe1",
             "mode" : "http",
             "servers" : [
                 {
-                    "name" : "test_be_1",
-                    "host" : "127.0.0.1",
-                    "port" : 1379,
-                    "weight" : 1,
-                    "maxconn" : 10,
-                    "check" : true,
+                    "name" : "test_be1_1",
+                    "host" : "192.168.59.103",
+                    "port" : 8081,
+                    "weight" : 100,
+                    "maxconn" : 100,
+                    "check" : false,
                     "checkInterval" : 10
                     },
                 {
-                    "name" : "test_be_2",
-                    "host" : "127.0.0.2",
-                    "port" : 1249,
-                    "weight" : 3,
-                    "maxconn" : 30,
+                    "name" : "test_be1_2",
+                    "host" : "192.168.59.103",
+                    "port" : 8082,
+                    "weight" : 100,
+                    "maxconn" : 100,
                     "check" : false,
                     "checkInterval" : 10
                 }
@@ -66,15 +78,15 @@
         },
         {
             "name" : "testbe2",
-            "mode" : "tcp",
+            "mode" : "http",
             "servers" : [
                 {
                     "name" : "test_be2_1",
-                    "host" : "127.0.0.1",
-                    "port" : 1380,
-                    "weight" : 1,
-                    "maxconn" : 10,
-                    "check" : true,
+                    "host" : "192.168.59.103",
+                    "port" : 8083,
+                    "weight" : 100,
+                    "maxconn" : 100,
+                    "check" : false,
                     "checkInterval" : 10
                 }
 

@@ -50,6 +50,7 @@ func main() {
 	kafkaPort       := flag.Int("kafkaPort",9092, "The port of the Kafka host")
 	mode			:= flag.String("mode","loadbalancer", "Switch for \"loadbalancer\" or \"localproxy\" mode")
     zooConString    := flag.String("zooConString", "localhost", "A zookeeper ensemble connection string")
+    zooConKey       := flag.String("zooConKey", "magneticio", "Zookeeper root key")
 	pidFile       	:= flag.String("pidFile", "resources/haproxy-private.pid", "Location of the HAproxy PID file")
 
 	flag.Parse()
@@ -85,7 +86,7 @@ func main() {
 		zkConnection := zkClient.connect()
 		defer zkConnection.Close()
 
-		zkClient.watchLocalProxyConfig(zkConnection,"/magnetic/localproxy")
+		zkClient.watchLocalProxyConfig(zkConnection,"/" + *zooConKey  + "/localproxy")
 
 
 	} else {
@@ -168,7 +169,7 @@ func main() {
 
 		 */
 
-		v1.POST("/backend/:name/:server/weight/:weight", func(c *gin.Context){
+		v1.POST("/backend/:name/server/:server/weight/:weight", func(c *gin.Context){
 				backend := c.Params.ByName("name")
 				server :=  c.Params.ByName("server")
 				weight,_  := strconv.Atoi(c.Params.ByName("weight"))
@@ -193,6 +194,46 @@ func main() {
 					}
 				}
 			})
+
+		/*
+
+			Frontend Actions
+
+		 */
+
+		v1.POST("frontend/:name/acl/:acl/:pattern",func(c *gin.Context){
+				backend := c.Params.ByName("name")
+				acl := c.Params.ByName("acl")
+				pattern := c.Params.ByName("pattern")
+				status,err := AddAcl(backend,acl,pattern)
+
+				// check on runtime errors
+				if err != nil {
+					c.String(500, err.Error())
+				} else {
+					switch status {
+					case "No such backend.\n\n":
+						c.String(404, status)
+					default:
+						//update the config object with the new acl
+						//err = UpdateWeightInConfig(backend, server, weight, ConfigObj)
+						c.String(200,"Ok")
+					}
+				}
+			})
+
+		v1.GET("/frontend/:name/acls",func(c *gin.Context){
+				frontend := c.Params.ByName("name")
+
+				status := GetACLsFromConfig(frontend,ConfigObj)
+				if err != nil {
+					c.String(500, err.Error())
+				} else {
+					c.JSON(200, status)
+				}
+			})
+
+
 		/*
 
 			Stats Actions

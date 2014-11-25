@@ -79,6 +79,28 @@ func SetWeight(backend string, server string, weight int) (string, error){
 
 /*
 
+	Frontends
+
+ */
+
+// Adds an ACL.
+// We need to match a frontend name to an id. This is somewhat awkard.
+
+func AddAcl(frontend string,acl string, pattern string)(string, error) {
+
+	result, err := HaproxyCmd("add acl " + acl + pattern)
+
+	if err != nil {
+		return "", err
+
+	} else {
+		return result, nil
+	}
+
+}
+
+/*
+
 	Stats
 
  */

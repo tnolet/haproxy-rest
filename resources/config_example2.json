@@ -1,0 +1,116 @@
+{
+    "frontends" : [
+        {
+            "name" : "test_fe_1",
+            "bindPort" : 8000,
+            "bindIp" : "0.0.0.0",
+            "defaultBackend" : "testbe1",
+            "mode" : "http",
+            "options" : {
+                "httpClose" :  true
+            },
+            "useBackends" : [
+                {
+                    "backend" : "testbe2",
+                    "condition" : "if uses_safari"
+                }
+            ],
+            "acls" : [
+                {
+                    "name" : "uses_safari",
+                    "pattern" : "hdr_sub(user-agent) Safari"
+                }
+            ]
+        }
+    ],
+    "backends" : [
+
+        {
+            "name" : "testbe1",
+            "mode" : "http",
+            "acls" : [],
+            "servers" : [
+                {
+                    "name" : "test_be1_1",
+                    "host" : "192.168.59.103",
+                    "port" : 8081,
+                    "weight" : 100,
+                    "maxconn" : 100,
+                    "check" : false,
+                    "checkInterval" : 10
+                },
+                {
+                    "name" : "test_be1_2",
+                    "host" : "192.168.59.103",
+                    "port" : 8082,
+                    "weight" : 100,
+                    "maxconn" : 100,
+                    "check" : false,
+                    "checkInterval" : 10
+                }
+            ],
+            "options" : {
+                "abortOnClose" :  false,
+                "allBackups" :  false,
+                "checkCache" :  false,
+                "forwardFor" :  false,
+                "httpClose" :  false,
+                "httpCheck" :  false,
+                "ldapCheck" :  false,
+                "mysqlCheck" :  false,
+                "pgsqlCheck" :  false,
+                "redisCheck" :  false,
+                "smtpCheck" :  false,
+                "sslHelloCheck" :  false,
+                "tcpKeepAlive" :  false,
+                "tcpLog" :  false,
+                "tcpSmartAccept" :  false,
+                "tcpSmartConnect" :  false,
+                "transparent" :  false
+            }
+        },
+        {
+            "name" : "testbe2",
+            "mode" : "http",
+            "servers" : [
+                {
+                    "name" : "test_be2_1",
+                    "host" : "192.168.59.103",
+                    "port" : 8083,
+                    "weight" : 100,
+                    "maxconn" : 100,
+                    "check" : false,
+                    "checkInterval" : 10
+                },
+                {
+                    "name" : "test_be1_3",
+                    "host" : "192.168.59.103",
+                    "port" : 8084,
+                    "weight" : 100,
+                    "maxconn" : 100,
+                    "check" : false,
+                    "checkInterval" : 10
+                }
+            ],
+            "options" : {
+                "abortOnClose" :  false,
+                "allBackups" :  false,
+                "checkCache" :  false,
+                "forwardFor" :  false,
+                "httpClose" :  false,
+                "httpCheck" :  false,
+                "ldapCheck" :  false,
+                "mysqlCheck" :  false,
+                "pgsqlCheck" :  false,
+                "redisCheck" :  false,
+                "smtpCheck" :  false,
+                "sslHelloCheck" :  false,
+                "tcpKeepAlive" :  false,
+                "tcpLog" :  false,
+                "tcpSmartAccept" :  false,
+                "tcpSmartConnect" :  false,
+                "transparent" :  false
+            }
+        }
+    ]
+}
