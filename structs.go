@@ -4,6 +4,14 @@ import(
 	"sync"
 )
 
+type Metric struct {
+
+	Name string `json:"name"`
+	Value int `json:"value"`
+	Timestamp int64 `json:"timestamp"`
+
+}
+
 // Struct to hold the output from the /stats endpoint
 type StatsGroup struct {
 	Pxname string `json:"pxname"`
@@ -122,21 +130,47 @@ type Info struct {
 	description string `json:"description"`
 }
 
-
-// Main configuration object. This contains all variables and is passed to
+// Main configuration object for load balancers. This contains all variables and is passed to
 // the templating engine.
 type Config struct {
-	Frontends [] *Frontend			`json:frontends"`
-	Backends [] *Backend 			`json:"backends"`
-	PidFile  string              	`json:"-"`
-	Mutex    *sync.RWMutex       	`json:"-"`
+	Frontends [] 	*Frontend			`json:"frontends"`
+	Backends [] 	*Backend 			`json:"backends"`
+	Services[]		*Service			`json:"services"`
+	PidFile  		string              	`json:"-"`
+	Mutex    		*sync.RWMutex       	`json:"-"`
+	templateFile    *string       			`json:"-"`
+	configFile    	*string       			`json:"-"`
 }
 
+func (f *Config) SetPid(pid string) {
+	f.PidFile = pid
+}
+
+func (f *Config) GetPid()(string) {
+	return f.PidFile
+}
+
+type Foo struct {
+	name string
+}
+
+func (f *Foo) SetName(name string) {
+	f.name = name
+}
+
+type Service struct {
+
+	Name           	string                  `json:"name"`
+	BindPort		int						`json:"bindPort"`
+	EndPoint		string					`json:"endPoint"`
+	Mode			string					`json:"mode"`
+}
 
 // Defines a single haproxy "backend".
 type Backend struct {
 	Name           string                    `json:"name"`
 	Mode		   string					 `json:"mode"`
+	ACLs		   [] *ACL					 `json:"acls"`
 	BackendServers [] *BackendServer 		 `json:"servers"`
 	Options        ProxyOptions              `json:"options"`
 }
@@ -148,7 +182,9 @@ type Frontend struct {
 	BindPort	   int			 			 `json:"bindPort"`
 	BindIp		   string			 	 	 `json:"bindIp"`
 	Options        ProxyOptions              `json:"options"`
-	UseBackend	   string		 			 `json:"useBackend"`
+	DefaultBackend string					 `json:"defaultBackend"`
+	UseBackends	   [] *UseBackend		 	 `json:"useBackends"`
+	ACLs		   [] *ACL					 `json:"acls"`
 }
 
 
@@ -182,4 +218,18 @@ type BackendServer struct {
 	MaxConn       int    `json:"maxconn"`
 	Check         bool   `json:"check"`
 	CheckInterval int    `json:"checkInterval"`
+}
+
+// Defines an ACL
+type ACL struct {
+
+	Name		string `json:"name"`
+	Pattern		string `json:"pattern"`
+
+}
+
+// defines a "use_backend" option. This normally hooks into an ACL
+type UseBackend struct {
+	Backend		string `json:"backend"`
+	Condition	string `json:"condition"`
 }

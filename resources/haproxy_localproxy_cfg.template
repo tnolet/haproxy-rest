@@ -1,0 +1,37 @@
+global
+ pidfile {{.PidFile}}
+ daemon
+ log 127.0.0.1 local0
+ log 127.0.0.1 local1 notice
+ maxconn 4096
+ stats socket /tmp/haproxy.stats.sock level admin
+
+defaults
+ option dontlognull
+ log         global
+ retries     3
+ maxconn     2000
+ contimeout  5000
+ clitimeout  50000
+ srvtimeout  50000
+
+listen stats
+ bind 127.0.0.1:1988
+ balance
+ mode http
+ stats enable
+ stats uri /
+ stats refresh 2s
+ stats realm Haproxy\ Stats
+ stats auth showme:showme
+
+ ### BEGIN GENERATED SECTION ###
+
+ {{range .Services}}
+ listen {{.Name}}
+     bind 0.0.0.0:{{.BindPort}}
+     mode {{.Mode}}
+     option tcplog
+     balance leastconn
+     server {{.Name}} {{.EndPoint}}:{{.BindPort}} check
+ {{end}}

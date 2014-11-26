@@ -15,9 +15,14 @@ global
 
    retries 3
    maxconn 2000
+
+   # slowloris protection: clients should send their full http request in the configured time
+   timeout http-request 5s
+
    timeout connect 5000ms
    timeout client 50000ms
    timeout server 50000ms
+
 listen stats :1988
    mode http
    stats enable
@@ -30,15 +35,57 @@ listen stats :1988
 {{range .Frontends}}
 frontend {{.Name}}
     bind {{.BindIp}}:{{.BindPort}}
+
+    ### Stick table for noting TCP rate limiting ###
+    # We block abuse on the frontend, regardless of which backend
+    # is taking the abuse
+    ###
+    stick-table type ip size 200k expire 1m store gpc0
+
     mode {{.Mode}}
     {{if .Options.HttpClose}} option http-server-close{{end}}
-    use_backend {{.UseBackend}}
+
+    # general ACLs
+
+    acl source_is_abuser src_get_gpc0({{.Name}}) gt 0
+    tcp-request connection track-sc1 src if ! source_is_abuser
+    use_backend abusers if source_is_abuser
+
+
+    {{range .ACLs}}
+    acl {{.Name}} {{.Pattern}}
+    {{end}}
+
+
+    {{range .UseBackends}}
+    use_backend {{.Backend}} {{.Condition}}
+    {{end}}
+
+    default_backend {{.DefaultBackend}}
+
 {{end}}
 
 
 {{range .Backends}}
+
 backend {{.Name}}
     mode {{.Mode}}
+
+
+    # stick table for rate limiting and abuse
+    stick-table type ip size 200k expire 60s store conn_rate(30s),bytes_out_rate(30s)
+
+    # values below are specific to the backend
+    # track the request and set ACL's
+    tcp-request content  track-sc2 src
+    acl conn_rate_abuse  sc2_conn_rate gt 2
+    acl data_rate_abuse  sc2_bytes_out_rate gt 20000000
+
+    # enforce rules on the ACL
+    acl mark_as_abuser   sc1_inc_gpc0 gt 0                          # increments the counter on the frontend
+    tcp-request content reject if conn_rate_abuse mark_as_abuser
+    tcp-request content reject if data_rate_abuse mark_as_abuser
+
    {{ if eq .Mode "http" }} balance roundrobin {{end}}
    {{ if eq .Mode "tcp" }} balance leastconn {{end}}
     option forwardfor
@@ -67,3 +114,7 @@ backend {{.Name}}
 {{end}}
 
 ### END GENERATED SECTION ###
+
+backend abusers
+    mode http
+    errorfile 503 /tmp/503rate.http
