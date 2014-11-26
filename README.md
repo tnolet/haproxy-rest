@@ -53,7 +53,7 @@ Or by exporting an environment variable `PORT0`. When deploying with Marathon 0.
      $ export PORT0=12345
      $ docker run --net=host tnolet/haproxy-rest
 
-## Getting statistics/metrics
+## Getting statistics
 
 Statistics are published in two different ways: straight from the REST interface and as Kafka topics
 
@@ -140,7 +140,7 @@ looks like this:
     
 You can set ACL's as part of a frontends configuration and use these ACL's to route traffic to different backends.
 The example below will route all Internet Explorer users to a different backend. You can update this on the fly
-without loosing sessions or causing errors due to Haproxy's smart restart mechanisms. q
+without loosing sessions or causing errors due to Haproxy's smart restart mechanisms.
 
     {
         "frontends" : [
