@@ -69,6 +69,7 @@ return acls
 
 }
 
+
 // Render a config object to a HAproxy config file
 func RenderConfig(config *Config) error {
 	f, err := ioutil.ReadFile(TemplateFile)

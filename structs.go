@@ -170,7 +170,6 @@ type Service struct {
 type Backend struct {
 	Name           string                    `json:"name"`
 	Mode		   string					 `json:"mode"`
-	ACLs		   [] *ACL					 `json:"acls"`
 	BackendServers [] *BackendServer 		 `json:"servers"`
 	Options        ProxyOptions              `json:"options"`
 }
@@ -183,8 +182,9 @@ type Frontend struct {
 	BindIp		   string			 	 	 `json:"bindIp"`
 	Options        ProxyOptions              `json:"options"`
 	DefaultBackend string					 `json:"defaultBackend"`
-	UseBackends	   [] *UseBackend		 	 `json:"useBackends"`
 	ACLs		   [] *ACL					 `json:"acls"`
+	HttpSpikeLimit SpikeLimit			 	 `json:"httpSpikeLimit"`
+	TcpSpikeLimit  SpikeLimit			 	 `json:"tcpSpikeLimit"`
 }
 
 
@@ -224,12 +224,14 @@ type BackendServer struct {
 type ACL struct {
 
 	Name		string `json:"name"`
+	Backend		string `json:"backend"`
 	Pattern		string `json:"pattern"`
-
 }
 
-// defines a "use_backend" option. This normally hooks into an ACL
-type UseBackend struct {
-	Backend		string `json:"backend"`
-	Condition	string `json:"condition"`
+// Defines a rate limiting setup
+
+type SpikeLimit struct {
+	SampleTime	string 	`json:"sampleTime"`
+	ExpiryTime  string	`json:"expiryTime"`
+	Rate		int		`json:"rate"`
 }

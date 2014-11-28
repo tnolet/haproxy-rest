@@ -31,6 +31,6 @@ out
 haproxy-rest
 resources/haproxy_new.cfg
 atlassian-ide-plugin.xml
-resources/persistent_config.json
+resources/persistent_lb_config.json
 resources/persistent_localproxy_config.json
 resources/haproxy_localproxy_new.cfg

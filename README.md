@@ -136,9 +136,9 @@ looks like this:
 
     -mode=localproxy -zooConString=10.161.63.88:2181,10.189.106.106:2181,10.5.99.23:2181
     
-### Setting ACL's and "use backends"
+### Setting ACL's
     
-You can set ACL's as part of a frontends configuration and use these ACL's to route traffic to different backends.
+You can set ACLs as part of a frontend's configuration and use these ACLs to route traffic to different backends.
 The example below will route all Internet Explorer users to a different backend. You can update this on the fly
 without loosing sessions or causing errors due to Haproxy's smart restart mechanisms.
 
@@ -147,15 +147,10 @@ without loosing sessions or causing errors due to Haproxy's smart restart mechan
             {
                 "name" : "test_fe_1",                               # declare a frontend
                 ...                                                 # some stuff left out for brevity
-                "useBackends" : [
-                    {
-                        "backend" : "testbe2",                      # set a "useBackends" rule with a condition
-                        "condition" : "if uses_msie"                # that matches the ACL set below
-                    }
-                ],
                 "acls" : [
                     {
                         "name" : "uses_msie",                       # set an ACL by giving it a name and some pattern. 
+                        "backend" : "testbe2",                      # set the backend to send traffic to
                         "pattern" : "hdr_sub(user-agent) MSIE"      # This pattern matches all HTTP requests that have
                     }                                               # "MSIE" in their User-Agent header                 
 
@@ -163,7 +158,28 @@ without loosing sessions or causing errors due to Haproxy's smart restart mechan
             }
         ]
     }
-        
+
+### Rate / Spike limiting 
+
+You can set limits on specific connection rates for HTTP and TCP traffic. This comes in handy if you want to protect
+yourself from abusive users or other spikes. The rates are calculated over a specific time range. The example below
+tracks the TCP connection rate over 30 seconds. If more than 200 new connections are made in this time period, the 
+client receives an 503 error and goes into a "cooldown" period for 60 seconds (`expiryTime`)
+
+    {
+        "frontends" : [
+            {
+                "name" : "test_fe_1",
+                ...                     
+                "tcpSpikeLimit" : {
+                    "sampleTime" : "30s",
+                    "expiryTime" : "60s",
+                    "rate" : 200
+            }
+    }
+
+
+Note: the time format used, i.e. `30s`, is the default Haproxy time format. More details [here](http://cbonte.github.io/haproxy-dconv/configuration-1.5.html#2.2)
     
 ### Startup Flags & Options
 

@@ -1,3 +1,5 @@
+//todo: Removing of acls and spikelimits is not persisted yet. Adding is working
+
 package main
 
 import (
@@ -41,9 +43,9 @@ func main() {
 	// implicit -h prints out help messages
 	port            := flag.Int("port",10001, "Port/IP to use for the REST interface. Overrides $PORT0 env variable")
 	lbConfigFile	:= flag.String("lbConfigFile", "resources/haproxy_new.cfg", "Location of the target HAproxy config file")
-	lbTemplateFile  := flag.String("lbTemplate", "resources/haproxy_cfg.template", "Template file to build HAproxy load balancer config")
-	proxyTemplateFile := flag.String("proxyTemplate", "resources/haproxy_localproxy_cfg.template", "Template file to build HAproxy local proxy config")
-	proxyConfigFile  := flag.String("proxyConfigFile", "resources/haproxy_localproxy_new.cfg", "Location of the target HAproxy localproxy config")
+	lbTemplateFile  := flag.String("lbTemplate", "resources/templates/haproxy_cfg.template", "Template file to build HAproxy load balancer config")
+	proxyTemplateFile := flag.String("proxyTemplate", "resources/templates/haproxy_localproxy_cfg.template", "Template file to build HAproxy local proxy config")
+	proxyConfigFile  := flag.String("proxyConfigFile", "resources/templates/haproxy_localproxy_new.cfg", "Location of the target HAproxy localproxy config")
 	binary        	:= flag.String("binary", "/usr/local/bin/haproxy", "Path to the HAproxy binary")
 	kafkaSwitch		:= flag.String("kafkaSwitch","off", "Switch whether to enable Kafka streaming")
 	kafkaHost       := flag.String("kafkaHost", "localhost", "The hostname or ip address of the Kafka host")
@@ -66,7 +68,7 @@ func main() {
 		log.Info(" ==> Starting in Load Balancer mode <==")
 
 		perstConfFile = "resources/persistent_lb_config.json"
-		exampleFile   = "resources/config_example.json"
+		exampleFile   = "examples/config_example.json"
 		SetTemplateFileName(*lbTemplateFile)
 		SetConfigFileName(*lbConfigFile)
 
@@ -76,7 +78,7 @@ func main() {
 		log.Info(" ==> Starting in Local Proxy mode <==")
 
 		perstConfFile = "resources/persistent_localproxy_config.json"
-		exampleFile   = "resources/config_localproxy_example.json"
+		exampleFile   = "examples/config_localproxy_example.json"
 		SetTemplateFileName(*proxyTemplateFile)
 		SetConfigFileName(*proxyConfigFile)
 
@@ -102,7 +104,7 @@ func main() {
 	if err != nil {
 
 		log.Warn("Unable to load persistent config from disk")
-		log.Warn("Loading example config")
+		log.Warn("Loading example config from " + exampleFile)
 
 		// set config temporarily to example config
 		SetFileName(exampleFile)
@@ -121,7 +123,7 @@ func main() {
 
 	//Create and empty pid file on the specified location, if not already there
 	if _, err := os.Stat(*pidFile); err == nil {
-		log.Info("Pid file exists, proceeding with startup...")
+		log.Info("Pid file exists, proceeding...")
 	} else {
 		emptyPid := []byte("")
 		ioutil.WriteFile(*pidFile, emptyPid, 0644)
@@ -132,7 +134,7 @@ func main() {
 
 	err = RenderConfig(ConfigObj)
 	if err != nil {
-		log.Error("Error rendering config file")
+		log.Error("Error rendering config file: " + err.Error())
 		return
 	} else {
 		err = Reload()
@@ -294,7 +296,6 @@ func main() {
 		// set config file
 
 		v1.POST("/config", func(c *gin.Context){
-
 				c.Bind(&ConfigObj)
 				err = RenderConfig(ConfigObj)
 				if err != nil {

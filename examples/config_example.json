@@ -9,18 +9,23 @@
             "options" : {
                 "httpClose" :  true
             },
-            "useBackends" : [
-                {
-                    "backend" : "testbe2",
-                    "condition" : "if uses_safari"
-                }
-            ],
             "acls" : [
                 {
-                    "name" : "uses_safari",
-                    "pattern" : "hdr_sub(user-agent) Safari"
+                    "name" : "uses_internetexplorer",
+                    "pattern" : "hdr_sub(user-agent) MSIE",
+                    "backend" : "testbe2"
                 }
-            ]
+            ],
+            "httpSpikeLimit" : {
+                "sampleTime" : "20s",
+                "expiryTime" : "40s",
+                "rate" : 100
+            },
+            "tcpSpikeLimit" : {
+                "sampleTime" : "30s",
+                "expiryTime" : "60s",
+                "rate" : 200
+            }
         }
     ],
     "backends" : [
@@ -28,7 +33,6 @@
         {
             "name" : "testbe1",
             "mode" : "http",
-            "acls" : [],
             "servers" : [
                 {
                     "name" : "test_be1_1",
@@ -38,7 +42,7 @@
                     "maxconn" : 100,
                     "check" : false,
                     "checkInterval" : 10
-                },
+                    },
                 {
                     "name" : "test_be1_2",
                     "host" : "192.168.59.103",
@@ -77,15 +81,6 @@
                     "name" : "test_be2_1",
                     "host" : "192.168.59.103",
                     "port" : 8083,
-                    "weight" : 100,
-                    "maxconn" : 100,
-                    "check" : false,
-                    "checkInterval" : 10
-                },
-                {
-                    "name" : "test_be1_3",
-                    "host" : "192.168.59.103",
-                    "port" : 8084,
                     "weight" : 100,
                     "maxconn" : 100,
                     "check" : false,

@@ -36,29 +36,50 @@ listen stats :1988
 frontend {{.Name}}
     bind {{.BindIp}}:{{.BindPort}}
 
-    ### Stick table for noting TCP rate limiting ###
-    # We block abuse on the frontend, regardless of which backend
-    # is taking the abuse
-    ###
-    stick-table type ip size 200k expire 1m store gpc0
-
     mode {{.Mode}}
     {{if .Options.HttpClose}} option http-server-close{{end}}
 
-    # general ACLs
+    ###
+    #
+    # Spike/Rate Limiting & Quota Management
+    #
+    # We use a stick table to keep track of TCP connections rates and bytes send out.
+    # On these metrics we set rules to designate upper limits. When limits are hit
+    # we reroute the traffic to a specific abusers backend
 
-    acl source_is_abuser src_get_gpc0({{.Name}}) gt 0
-    tcp-request connection track-sc1 src if ! source_is_abuser
-    use_backend abusers if source_is_abuser
+    {{if lt .HttpSpikeLimit.Rate 0 }} # start HTTP spike limit generation
 
+        stick-table type ip size 200k expire {{ .HttpSpikeLimit.ExpiryTime}} store http_req_rate({{ .HttpSpikeLimit.SampleTime}})
+
+        # values below are specific to the backend
+        # track the request and set ACL's
+        tcp-request content  track-sc1 src
+        acl marked_as_abuser  sc1_http_req_rate gt {{ .HttpSpikeLimit.Rate}}
+
+        use_backend abusers if marked_as_abuser
+
+    {{end}} # end HTTP spike limit generation
+
+    {{if lt .TcpSpikeLimit.Rate 0 }} # start TCP spike limit generation
+
+        stick-table type ip size 200k expire {{ .TcpSpikeLimit.ExpiryTime}} store conn_rate({{ .TcpSpikeLimit.SampleTime}})
+
+        # values below are specific to the backend
+        # track the request and set ACL's
+        tcp-request content  track-sc2 src
+        acl marked_as_abuser  sc2_conn_rate gt {{ .TcpSpikeLimit.Rate}}
+
+        use_backend abusers if marked_as_abuser
+
+    {{end}} # end spike limit generation
+
+    ###
+    # ACL Management
+    #
 
     {{range .ACLs}}
     acl {{.Name}} {{.Pattern}}
-    {{end}}
-
-
-    {{range .UseBackends}}
-    use_backend {{.Backend}} {{.Condition}}
+    use_backend {{.Backend}} if {{.Name}}
     {{end}}
 
     default_backend {{.DefaultBackend}}
@@ -70,21 +91,6 @@ frontend {{.Name}}
 
 backend {{.Name}}
     mode {{.Mode}}
-
-
-    # stick table for rate limiting and abuse
-    stick-table type ip size 200k expire 60s store conn_rate(30s),bytes_out_rate(30s)
-
-    # values below are specific to the backend
-    # track the request and set ACL's
-    tcp-request content  track-sc2 src
-    acl conn_rate_abuse  sc2_conn_rate gt 2
-    acl data_rate_abuse  sc2_bytes_out_rate gt 20000000
-
-    # enforce rules on the ACL
-    acl mark_as_abuser   sc1_inc_gpc0 gt 0                          # increments the counter on the frontend
-    tcp-request content reject if conn_rate_abuse mark_as_abuser
-    tcp-request content reject if data_rate_abuse mark_as_abuser
 
    {{ if eq .Mode "http" }} balance roundrobin {{end}}
    {{ if eq .Mode "tcp" }} balance leastconn {{end}}
@@ -117,4 +123,4 @@ backend {{.Name}}
 
 backend abusers
     mode http
-    errorfile 503 /tmp/503rate.http
+    errorfile 409 /tmp/500rate.http

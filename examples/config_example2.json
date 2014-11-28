@@ -9,27 +9,20 @@
             "options" : {
                 "httpClose" :  true
             },
-            "useBackends" : [
-                {
-                    "backend" : "testbe2",
-                    "condition" : "if uses_internetexplorer"
-                },
-                {
-                    "backend" : "testbe1",
-                    "condition" : "if condition_1"
-                }
-            ],
             "acls" : [
                 {
-                    "name" : "uses_internetexplorer",
-                    "pattern" : "hdr_sub(user-agent) MSIE"
-                },
-                {
-                    "name" : "condition_1",
-                    "pattern" : "url_beg"
+                    "name" : "uses_safari",
+                    "backend" : "testbe2",
+                    "pattern" : "hdr_sub(user-agent) Safari"
                 }
-            ]
+            ],
+            "httpSpikeLimit" : {
+                "sampleTime" : "30s",
+                "expiryTime" : "60s",
+                "rate" : 5
+            }
         }
+
     ],
     "backends" : [
 
@@ -45,7 +38,7 @@
                     "maxconn" : 100,
                     "check" : false,
                     "checkInterval" : 10
-                    },
+                },
                 {
                     "name" : "test_be1_2",
                     "host" : "192.168.59.103",
@@ -88,8 +81,16 @@
                     "maxconn" : 100,
                     "check" : false,
                     "checkInterval" : 10
+                },
+                {
+                    "name" : "test_be1_3",
+                    "host" : "192.168.59.103",
+                    "port" : 8084,
+                    "weight" : 100,
+                    "maxconn" : 100,
+                    "check" : false,
+                    "checkInterval" : 10
                 }
-
             ],
             "options" : {
                 "abortOnClose" :  false,
