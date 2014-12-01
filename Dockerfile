@@ -16,7 +16,11 @@ ADD ./target/linux_i386/haproxy-rest /haproxy-rest
 
 ADD ./resources /resources
 
+ADD ./examples /examples
+
 ADD ./target/linux_i386/haproxy /usr/local/bin/haproxy
+
+ADD ./resources/500rate.http /tmp/500rate.http
 
 EXPOSE 80
 
