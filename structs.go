@@ -183,8 +183,8 @@ type Frontend struct {
 	Options        ProxyOptions              `json:"options"`
 	DefaultBackend string					 `json:"defaultBackend"`
 	ACLs		   [] *ACL					 `json:"acls"`
-	HttpSpikeLimit SpikeLimit			 	 `json:"httpSpikeLimit"`
-	TcpSpikeLimit  SpikeLimit			 	 `json:"tcpSpikeLimit"`
+	HttpSpikeLimit SpikeLimit			 	 `json:"httpSpikeLimit,omitempty"`
+	TcpSpikeLimit  SpikeLimit			 	 `json:"tcpSpikeLimit,omitempty"`
 }
 
 
@@ -231,7 +231,7 @@ type ACL struct {
 // Defines a rate limiting setup
 
 type SpikeLimit struct {
-	SampleTime	string 	`json:"sampleTime"`
-	ExpiryTime  string	`json:"expiryTime"`
-	Rate		int		`json:"rate"`
+	SampleTime	string 	`json:"sampleTime,omitempty"`
+	ExpiryTime  string	`json:"expiryTime,omitempty"`
+	Rate		int		`json:"rate,omitempty"`
 }

@@ -4,10 +4,12 @@
 HAproxy-rest started as a REST interface for HAproxy. Now it's much more. Features are:
 
 -   Update the config through REST or through Zookeeper
+-   Run in full load balancer mode, or simple local proxy mode
 -   Adjust server weight
 -   Get statistics on frontends, backends and servers
 -   Stream statistics to Kafka
 -   Set ACL's *(experimental)*
+-   Set HTTP & TCP Spike limiting *(experimental)*
 
 
 *Important* : Currently, HAproxy-rest does NOT check validity of the HAproxy command, ACLs and configs submitted to it.
@@ -106,7 +108,11 @@ The messages on that topic are json strings, where the "name" key indicates what
      "timestamp": 1413546338
     }
 
-            
+__Note:__ currently, not all Haproxy metric types are sent to Kafka. At this moment, the list is hardcoded as a `wantedMetrics` slice:
+    
+    wantedMetrics  := []string{ "Scur", "Qcur","Smax","Slim","Weight","Qtime","Ctime","Rtime","Ttime","Req_rate","Req_rate_max","Req_tot","Rate","Rate_lim","Rate_max" }
+
+For an explanation of the metric types, please read [this](http://cbonte.github.io/haproxy-dconv/configuration-1.5.html#9.1)            
 ### Updating the configuration via REST
 
 Post a configuration. You can use the example file `resources/config_example.json`
@@ -123,18 +129,36 @@ Update the weight of some backend server
     
     Ok
 
-### Updating the configuration via Zookeeper
+### Running as local proxy + Zookeeper
 
-When working with multiple haproxy-rests in `localproxy` mode, for instance in a Mesos/Marathon cluster, or any
-other distributed or PaaS like situation, you can make use of Zookeeper to update the configuration. 
+At [magnetic.io](http://magnetic.io), we use Haproxy-rest running in local proxy mode for simple service discovery.
+When you start HAproxy-rest with `-mode=localproxy`, only very simple binds are set up between two host:port pairs.
+No frontends, no backends, no ACL's, no nothing.  
 
-Haproxy-rest will watch for changes to the key: `/magneticio/loclaproxy`  
-You can set your own namespace using the `-zooConKey` flag.  The `/localproxy` part is hardcoded.
+__Note:__ local proxy mode requires a Zookeeper ensemble to function: local proxy only gets its config from a Zookeeper
+node.  
 
-To this key you need to publish a full configuration in JSON format. Starting up a localproxy using Zookeeper
+Haproxy-rest will watch for changes to the key: `/magnetic/localproxy`. You can set your own namespace using the `-zooConKey` flag.  The `/localproxy` part is hardcoded.
+To this node you need to publish a full configuration in JSON format. Starting up a localproxy using Zookeeper
 looks like this:  
 
     -mode=localproxy -zooConString=10.161.63.88:2181,10.189.106.106:2181,10.5.99.23:2181
+    
+This will result in config similar to the following JSON. Notice the `frontends` and `backends` are empty.
+There is just a simple array of services that bind a port to an endpoint.
+
+    {
+        frontends: [ ],
+        backends: [ ],
+        services: [
+            {
+                name: "vrn-development-service-4d7a24cd",
+                bindPort: 22500,
+                endPoint: "10.224.236.38",
+                mode: "tcp"
+            }
+        ]
+    }
     
 ### Setting ACL's
     
@@ -170,7 +194,12 @@ client receives an 503 error and goes into a "cooldown" period for 60 seconds (`
         "frontends" : [
             {
                 "name" : "test_fe_1",
-                ...                     
+                ... 
+                "httpSpikeLimit" : {
+                    "sampleTime" : "30s",
+                    "expiryTime" : "60s",
+                    "rate" : 50
+                },
                 "tcpSpikeLimit" : {
                     "sampleTime" : "30s",
                     "expiryTime" : "60s",
@@ -180,7 +209,7 @@ client receives an 503 error and goes into a "cooldown" period for 60 seconds (`
 
 
 Note: the time format used, i.e. `30s`, is the default Haproxy time format. More details [here](http://cbonte.github.io/haproxy-dconv/configuration-1.5.html#2.2)
-    
+ 
 ### Startup Flags & Options
 
     -binary="/usr/local/bin/haproxy"                           Path to the HAproxy binary
@@ -194,7 +223,7 @@ Note: the time format used, i.e. `30s`, is the default Haproxy time format. More
     -port=10001                                                Port/IP to use for the REST interface. Overrides $PORT0 env variable
     -proxyConfigFile="resources/haproxy_localproxy_new.cfg"    Location of the target HAproxy localproxy config
     -proxyTemplate="resources/haproxy_localproxy_cfg.template" Template file to build HAproxy local proxy config
-    -zooConKey="magneticio"                                    Zookeeper root key
+    -zooConKey="magnetic"                                      Zookeeper root key
     -zooConString="localhost"                                  A zookeeper ensemble connection string
     
 for example, this would start up haproxy-rest on port 12345

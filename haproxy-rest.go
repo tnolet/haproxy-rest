@@ -52,7 +52,7 @@ func main() {
 	kafkaPort       := flag.Int("kafkaPort",9092, "The port of the Kafka host")
 	mode			:= flag.String("mode","loadbalancer", "Switch for \"loadbalancer\" or \"localproxy\" mode")
     zooConString    := flag.String("zooConString", "localhost", "A zookeeper ensemble connection string")
-    zooConKey       := flag.String("zooConKey", "magneticio", "Zookeeper root key")
+    zooConKey       := flag.String("zooConKey", "magnetic", "Zookeeper root key")
 	pidFile       	:= flag.String("pidFile", "resources/haproxy-private.pid", "Location of the HAproxy PID file")
 
 	flag.Parse()
@@ -296,6 +296,13 @@ func main() {
 		// set config file
 
 		v1.POST("/config", func(c *gin.Context){
+
+				// clear the current config. This is dirty, should be able to clear the ConfigObj in
+				// one go.
+				ConfigObj.Frontends = [] *Frontend{}
+				ConfigObj.Backends = [] *Backend{}
+				ConfigObj.Services = [] *Service{}
+
 				c.Bind(&ConfigObj)
 				err = RenderConfig(ConfigObj)
 				if err != nil {

@@ -36,7 +36,6 @@ func UpdateWeightInConfig(backend string, server string, weight int, config *Con
 	defer config.Mutex.RUnlock()
 
 	for _, be := range config.Backends {
-		fmt.Printf(be.Name)
 		if be.Name == backend {
 			for _, srv := range be.BackendServers {
 				if srv.Name == server {

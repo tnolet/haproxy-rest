@@ -20,6 +20,11 @@
                 "sampleTime" : "30s",
                 "expiryTime" : "60s",
                 "rate" : 5
+            },
+            "tcpSpikeLimit" : {
+                "sampleTime" : "30s",
+                "expiryTime" : "60s",
+                "rate" : 200
             }
         }
 

@@ -47,7 +47,7 @@ frontend {{.Name}}
     # On these metrics we set rules to designate upper limits. When limits are hit
     # we reroute the traffic to a specific abusers backend
 
-    {{if lt .HttpSpikeLimit.Rate 0 }} # start HTTP spike limit generation
+    {{if .HttpSpikeLimit.Rate }} # start HTTP spike limit generation
 
         stick-table type ip size 200k expire {{ .HttpSpikeLimit.ExpiryTime}} store http_req_rate({{ .HttpSpikeLimit.SampleTime}})
 
@@ -60,7 +60,7 @@ frontend {{.Name}}
 
     {{end}} # end HTTP spike limit generation
 
-    {{if lt .TcpSpikeLimit.Rate 0 }} # start TCP spike limit generation
+    {{if .TcpSpikeLimit.Rate }} # start TCP spike limit generation
 
         stick-table type ip size 200k expire {{ .TcpSpikeLimit.ExpiryTime}} store conn_rate({{ .TcpSpikeLimit.SampleTime}})
 
