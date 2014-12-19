@@ -15,7 +15,7 @@ HAproxy-rest started as a REST interface for HAproxy. Now it's much more. Featur
 *Important* : Currently, HAproxy-rest does NOT check validity of the HAproxy command, ACLs and configs submitted to it.
 Submitting a config where a frontend references a non-existing backend will be accepted by the REST api but crash HAproxy
 
-### Installing: the easy Docker way
+## Installing: the easy Docker way
 
 Start up an instance with all defaults and bind it to the local network interface
 
@@ -44,7 +44,7 @@ The default ports are:
     10001      REST Api (for config, stats etc)  
     1988       built-in Haproxy stats
     
-### Changing ports
+## Changing ports
 
 You could change the REST api port by adding the `-port` flag
 
@@ -160,6 +160,31 @@ There is just a simple array of services that bind a port to an endpoint.
         ]
     }
     
+## Setting Frontends
+
+The frontend is the basic listening port or unix socket. Here's an example of a basic HTTP frontend:
+
+    {
+        "name" : "test_fe_1",
+        "bindPort" : 8000,
+        "bindIp" : "0.0.0.0",
+        "defaultBackend" : "testbe1",
+        "mode" : "http",
+        "options" : {
+            "httpClose" :  true
+    }
+
+You can also setup the frontend to listen on Unix sockets. _Note_: you have to explicitly declare the protocol
+coming over the socket. On this example we declare the Haproxy specific `proxy` protocol.
+
+    {
+        "name" : "test_fe_1",
+        "mode" : "http",
+        "defaultBackend" : "testbe2",
+        "unixSock" : "/tmp/vamp_testbe2_1.sock",
+        "sockProtocol" : "accept-proxy"
+    }
+    
 ### Setting ACL's
     
 You can set ACLs as part of a frontend's configuration and use these ACLs to route traffic to different backends.
@@ -207,8 +232,67 @@ client receives an 503 error and goes into a "cooldown" period for 60 seconds (`
             }
     }
 
-
 Note: the time format used, i.e. `30s`, is the default Haproxy time format. More details [here](http://cbonte.github.io/haproxy-dconv/configuration-1.5.html#2.2)
+
+## Setting Backends and servers
+
+
+More info to follow. _Note_: You can point servers to standard IP + port pairs or to Unix sockets.
+Here are some examples:
+
+    {  "backends" : [
+    
+            {
+                "name" : "testbe1",
+                "mode" : "http",
+                "servers" : [
+                    {
+                        "name" : "test_be1_1",
+                        "host" : "192.168.59.103",
+                        "port" : 8081,
+                        "weight" : 100,
+                        "maxconn" : 1000,
+                        "check" : false,
+                        "checkInterval" : 10
+                        },
+                    {
+                        "name" : "test_be1_2",
+                        "host" : "192.168.59.103",
+                        "port" : 8082,
+                        "weight" : 100,
+                        "maxconn" : 1000,
+                        "check" : false,
+                        "checkInterval" : 10
+                    }
+                ],
+                "proxyMode" : false
+            }
+        ]
+    }
+    
+    
+And with proxy mode set to true:
+
+    { 
+        "backends" : 
+            [
+                {
+                    "name" : "testbe2",
+                    "mode" : "http",
+                    "servers" : [
+                        {
+                            "name" : "test_be2_1",
+                            "unixSock" : "/tmp/vamp_testbe2_1.sock",
+                            "weight" : 100
+                        }
+                    ],
+                    "proxyMode" : true,
+                    "options" : {}
+                }
+            ]
+    }
+
+
  
 ### Startup Flags & Options
 

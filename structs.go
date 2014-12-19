@@ -172,6 +172,7 @@ type Backend struct {
 	Mode		   string					 `json:"mode"`
 	BackendServers [] *BackendServer 		 `json:"servers"`
 	Options        ProxyOptions              `json:"options"`
+	ProxyMode	   bool						 `json:"proxyMode"`
 }
 
 // Defines a single haproxy "frontend".
@@ -180,6 +181,8 @@ type Frontend struct {
 	Mode		   string					 `json:"mode"`
 	BindPort	   int			 			 `json:"bindPort"`
 	BindIp		   string			 	 	 `json:"bindIp"`
+	UnixSock	   string					 `json:"unixSock"`
+	SockProtocol   string					 `json:"sockProtocol"`
 	Options        ProxyOptions              `json:"options"`
 	DefaultBackend string					 `json:"defaultBackend"`
 	ACLs		   [] *ACL					 `json:"acls"`
@@ -196,17 +199,11 @@ type ProxyOptions struct {
 	ForwardFor      bool `json:"forwardFor"`
 	HttpClose       bool `json:"httpClose"`
 	HttpCheck       bool `json:"httpCheck"`
-	LdapCheck       bool `json:"ldapCheck"`
-	MysqlCheck      bool `json:"mysqlCheck"`
-	PgsqlCheck      bool `json:"pgsqlCheck"`
-	RedisCheck      bool `json:"redisCheck"`
-	SmtpCheck       bool `json:"smtpCheck"`
 	SslHelloCheck   bool `json:"sslHelloCheck"`
 	TcpKeepAlive    bool `json:"tcpKeepAlive"`
 	TcpLog          bool `json:"tcpLog"`
 	TcpSmartAccept  bool `json:"tcpSmartAccept"`
 	TcpSmartConnect bool `json:"tcpSmartConnect"`
-	Transparent     bool `json:"transparent"`
 }
 
 // Defines a server which exists in a backend.
@@ -214,6 +211,7 @@ type BackendServer struct {
 	Name          string `json:"name"`
 	Host		  string `json:"host"`
 	Port          int 	 `json:"port"`
+	UnixSock	  string `json:"unixSock"`
 	Weight        int    `json:"weight"`
 	MaxConn       int    `json:"maxconn"`
 	Check         bool   `json:"check"`

@@ -17,10 +17,17 @@
                 }
             ],
             "httpSpikeLimit" : {
-                "sampleTime" : "20s",
-                "expiryTime" : "40s",
+                "sampleTime" : "5",
+                "expiryTime" : "10s",
                 "rate" : 100
             }
+        },
+        {
+            "name" : "test_fe_1",
+            "mode" : "http",
+            "defaultBackend" : "testbe2",
+            "unixSock" : "/tmp/vamp_testbe2_1.sock",
+            "sockProtocol" : "accept-proxy"
         }
     ],
     "backends" : [
@@ -34,7 +41,7 @@
                     "host" : "192.168.59.103",
                     "port" : 8081,
                     "weight" : 100,
-                    "maxconn" : 100,
+                    "maxconn" : 1000,
                     "check" : false,
                     "checkInterval" : 10
                     },
@@ -43,11 +50,12 @@
                     "host" : "192.168.59.103",
                     "port" : 8082,
                     "weight" : 100,
-                    "maxconn" : 100,
+                    "maxconn" : 1000,
                     "check" : false,
                     "checkInterval" : 10
                 }
             ],
+            "proxyMode" : false,
             "options" : {
                 "abortOnClose" :  false,
                 "allBackups" :  false,
@@ -68,39 +76,19 @@
                 "transparent" :  false
             }
         },
-        {
-            "name" : "testbe2",
-            "mode" : "http",
-            "servers" : [
-                {
-                    "name" : "test_be2_1",
-                    "host" : "192.168.59.103",
-                    "port" : 8083,
-                    "weight" : 100,
-                    "maxconn" : 100,
-                    "check" : false,
-                    "checkInterval" : 10
+            {
+                "name" : "testbe2",
+                "mode" : "http",
+                "servers" : [
+                    {
+                        "name" : "test_be2_1",
+                        "unixSock" : "/tmp/vamp_testbe2_1.sock",
+                        "weight" : 100
+                    }
+                ],
+                "proxyMode" : true,
+                "options" : {
                 }
-            ],
-            "options" : {
-                "abortOnClose" :  false,
-                "allBackups" :  false,
-                "checkCache" :  false,
-                "forwardFor" :  false,
-                "httpClose" :  false,
-                "httpCheck" :  false,
-                "ldapCheck" :  false,
-                "mysqlCheck" :  false,
-                "pgsqlCheck" :  false,
-                "redisCheck" :  false,
-                "smtpCheck" :  false,
-                "sslHelloCheck" :  false,
-                "tcpKeepAlive" :  false,
-                "tcpLog" :  false,
-                "tcpSmartAccept" :  false,
-                "tcpSmartConnect" :  false,
-                "transparent" :  false
             }
-        }
     ]
 }
