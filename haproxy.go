@@ -32,6 +32,7 @@ func SetBinaryFileName(c string) error {
 // Executes a arbitrariry HAproxy command on the unix socket
 func HaproxyCmd(cmd string) (string, error){
 
+
 	// connect to haproxy
 	conn, err_conn := net.Dial("unix", "/tmp/haproxy.stats.sock")
 	defer conn.Close()

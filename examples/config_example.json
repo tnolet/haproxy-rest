@@ -23,7 +23,7 @@
             }
         },
         {
-            "name" : "test_fe_1",
+            "name" : "test_fe_1_a",
             "mode" : "http",
             "defaultBackend" : "testbe2",
             "unixSock" : "/tmp/vamp_testbe2_1.sock",

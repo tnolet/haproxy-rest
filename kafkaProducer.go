@@ -92,18 +92,9 @@ func pushMetrics(producer *sarama.Producer, mode string) {
 								log.Debug("Successfully sent message to Kafka on topic: " + mode + "." + "all")
 							}
 						}
-
 					}
-
 				}
-
-
 			}
-
-
-
-
-
 		time.Sleep(3000 * time.Millisecond)
 	}
 }

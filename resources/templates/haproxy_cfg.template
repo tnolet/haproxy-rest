@@ -1,17 +1,25 @@
 global
  pidfile {{.PidFile}}
- log 127.0.0.1 local0
- log 127.0.0.1 local1 notice
+
  daemon
  maxconn 4096
  stats socket /tmp/haproxy.stats.sock level admin
+
+
+ ###
+ #
+ # Logging Setup
+ #
+ # We log to a unix socket and read that socket from the Go program
+ #
+
+ log /var/run/vamp.log.sock local0
 
  defaults
    log global
    mode http
    option dontlognull
    option redispatch
-   option httplog
    option clitcpka
    option srvtcpka
    option http-keep-alive
@@ -40,6 +48,11 @@ frontend {{.Name}}
     {{if .BindIp}}
     bind {{.BindIp}}:{{.BindPort}}
     {{end}}
+
+    {{ if eq .Mode "http" }} option httplog {{end}}
+    {{ if eq .Mode "tcp" }} option tcplog {{end}}
+
+    log-format {\ "timestamp"\ :\ %t,\ "frontend"\ :\ "%f",\ "method"\ :\ "%r",\ "captured_request_headers"\ :\ "%hrl",\ "captures_response_headers"\ :\ "%hsl"\ }
 
     {{if .UnixSock}}
     bind unix@{{.UnixSock}} {{.SockProtocol}}
@@ -116,7 +129,13 @@ backend {{.Name}}
 {{else}}
 
     option forwardfor
-   {{ if eq .Mode "http" }} http-response set-header X-Vamp-Server %s {{end}}
+   {{ if eq .Mode "http" }}
+
+   http-response set-header X-Vamp-Server-Name %s
+   http-response set-header X-Vamp-Server-ResponseTime %t
+
+   {{end}}
+
    {{ if eq .Mode "http" }} cookie vamp_srv insert httponly maxidle 5m maxlife 1h {{end}}
     {{$mode := .Mode}}{{range .BackendServers}}
         server {{.Name}} {{.Host}}:{{.Port}} {{if eq $mode "http" }} cookie {{.Name}} {{end}} weight {{.Weight}} maxconn {{.MaxConn}} {{if .Check}}check inter {{.CheckInterval}}{{end}} {{end}}

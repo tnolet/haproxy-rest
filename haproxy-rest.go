@@ -153,6 +153,12 @@ func main() {
 	}
 
 
+	// Create log listener
+	logSocket := "/var/run/vamp.log.sock"
+	logListener(logSocket)
+	defer os.Remove(logSocket)
+
+
 	log.Info("Starting REST server")
 	// initialize the web stack
 	r := gin.New()
@@ -165,6 +171,8 @@ func main() {
 	v1 := r.Group("/v1")
 
 	{
+
+
 		/*
 
 			Backend Actions
@@ -336,6 +344,13 @@ func main() {
 				}
 
 			})
+
+		/*
+
+			GUI
+
+ 		*/
+
 	}
 
 	// get the Mesos port to listen on
