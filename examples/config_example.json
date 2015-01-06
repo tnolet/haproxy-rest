@@ -25,7 +25,7 @@
         {
             "name" : "test_fe_1_a",
             "mode" : "http",
-            "defaultBackend" : "testbe2",
+            "defaultBackend" : "testbe1",
             "unixSock" : "/tmp/vamp_testbe2_1.sock",
             "sockProtocol" : "accept-proxy"
         }
