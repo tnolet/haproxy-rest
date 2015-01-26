@@ -1,10 +1,95 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/html">
 <head lang="en">
     <meta charset="UTF-8">
     <title></title>
+    <link rel="stylesheet" href="css/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="css/admin.css">
+
 </head>
 <body>
+<div id="demo" class="container">
+    <div class="row">
+        <h4>frontends</h4>
+        <table class="table table-responsive table-hover table-striped">
+            <thead class="h4">
+            <tr>
+                <td>name</td>
+                <td>ip</td>
+                <td>port</td>
+                <td>defaultBackend</td>
+                <td>mode</td>
+                <td>unix socket</td>
+                <td>socket protocol</td>
+                <td>acls</td>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-repeat="sortedConfig">
+                <td>{{name}}</td>
+                <td>{{bindIp}}</td>
+                <td>{{bindPort}}</td>
+                <td>{{defaultBackend}}</td>
+                <td>{{mode}}</td>
+                <td>{{unixSock}}</td>
+                <td>{{sockProtocol}}</td>
+                <td>
+                    <ul class="list-unstyled">
+                        <li v-repeat="acls" class="">
+                            <span class="">name:</span>{{name}}<br>
+                            <span class="">Pattern:</span>{{pattern}}<br>
+                            <span class="">Backend:</span>{{backend}}<br>
+                        </li>
+                    </ul>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="row">
+        <h4>backends</h4>
+        <table class="table table-responsive table-hover table-striped">
+            <thead class="h6">
+            <tr>
+                <td>name</td>
+                <td>mode</td>
+                <td>proxyMode</td>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-repeat="config.backends">
+                <td>{{name}}</td>
+                <td>{{mode}}</td>
+                <td>{{proxyMode}}</td>
+                <td>
+                    <p v-repeat="servers">
+                        weight: {{weight}} -> name:{{name}}
+                    </p>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 
+    <!-- Nav tabs -->
+    <!--<ul class="nav nav-tabs" role="tablist">-->
+        <!--<li class="active"><a href="#home" role="tab" data-toggle="tab">Home</a></li>-->
+        <!--<li><a href="#profile" role="tab" data-toggle="tab">Profile</a></li>-->
+        <!--<li><a href="#messages" role="tab" data-toggle="tab">Messages</a></li>-->
+        <!--<li><a href="#settings" role="tab" data-toggle="tab">Settings</a></li>-->
+    <!--</ul>-->
+
+    <!-- Tab panes -->
+    <!--<div class="tab-content" id="tabs">-->
+        <!--<div class="tab-pane active" id="home">...</div>-->
+        <!--<div class="tab-pane" id="profile">...</div>-->
+        <!--<div class="tab-pane" id="messages">...</div>-->
+        <!--<div class="tab-pane" id="settings">...</div>-->
+    <!--</div>-->
+</div>
+
+
+<script src="js/vue.min.js"></script>
+<script src="js/admin.js"></script>
 </body>
 </html>

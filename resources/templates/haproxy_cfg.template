@@ -8,11 +8,11 @@ global
 
  ###
  #
- # Logging Setup
+ # Experimental: Logging Setup
  #
  # We log to a unix socket and read that socket from the Go program
  #
-
+ #
  log /var/run/vamp.log.sock local0
 
  defaults
@@ -52,7 +52,20 @@ frontend {{.Name}}
     {{ if eq .Mode "http" }} option httplog {{end}}
     {{ if eq .Mode "tcp" }} option tcplog {{end}}
 
+
+    ###
+    #
+    # Set logging and set the headers to capture
+
+    # capture request header X-Vamp-Server-CurrentTime len 50
+    # capture response header X-Vamp-Server-ResponseTime len 50
+    # capture response header X-Vamp-Server-Name len 50
+
+
     log-format {\ "timestamp"\ :\ %t,\ "frontend"\ :\ "%f",\ "method"\ :\ "%r",\ "captured_request_headers"\ :\ "%hrl",\ "captures_response_headers"\ :\ "%hsl"\ }
+
+    #
+    ###
 
     {{if .UnixSock}}
     bind unix@{{.UnixSock}} {{.SockProtocol}}

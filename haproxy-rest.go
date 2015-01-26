@@ -154,9 +154,9 @@ func main() {
 
 
 	// Create log listener
-	logSocket := "/var/run/vamp.log.sock"
-	logListener(logSocket)
-	defer os.Remove(logSocket)
+//	logSocket := "/var/run/vamp.log.sock"
+//	logListener(logSocket)
+//	defer os.Remove(logSocket)
 
 
 	log.Info("Starting REST server")
