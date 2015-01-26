@@ -37,6 +37,7 @@ var demo = new Vue({
         sortData: function(config) {
             var sortedConfig = [];
             config.frontends.forEach(function(fe){
+                console.log(fe)
                 config.backends.forEach(function(be){
                     if(be.name == fe.defaultBackend) {
                         fe.defaultBackend = be
