@@ -1,5 +1,6 @@
-# HAproxy-rest
----
+# HAproxy-rest - DEPRECATED
+
+> This repo is no longer maintained. Haproxy-rest is surpassed by [Vamp Router](https://github.com/magneticio/vamp-router)
 
 HAproxy-rest started as a REST interface for HAproxy. Now it's much more. Features are:
 
