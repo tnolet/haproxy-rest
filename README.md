@@ -14,7 +14,7 @@ HAproxy-rest started as a REST interface for HAproxy. Now it's much more. Featur
 
 
 *Important* : Currently, HAproxy-rest does NOT check validity of the HAproxy command, ACLs and configs submitted to it.
-Submitting a config where a frontend references a non-existing backend will be accepted by the REST api but crash HAproxy
+Submitting a config where a frontend references a non-existing backend will be accepted by the REST api but crash HAproxy.
 
 ## Installing: the easy Docker way
 
